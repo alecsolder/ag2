@@ -560,6 +560,26 @@ def _generate_swarm_tool_reply(
     return False, None
 
 
+def _establish_swarm_agent(agent: ConversableAgent):
+    """Establish the swarm agent with the necessary hooks and functions."""
+
+    agent.after_work = None
+
+    # Used in the tool execution agent to transfer to the next agent
+    if agent.name == __TOOL_EXECUTOR_NAME__:
+        agent._next_agent = None
+    else:
+        # Register the hook to update agent state (except tool executor)
+        agent.register_hook("update_agent_state", _update_conditional_functions)
+
+    # Store nested chats hand offs as we'll establish these in the initiate_swarm_chat
+    # List of Dictionaries containing the nested_chats and condition
+    agent._nested_chat_handoffs = []
+
+    # Store conditional functions (and their ON_CONDITION instances) to add/remove later when transitioning to this agent
+    agent._conditional_functions = {}
+
+
 class SwarmAgent(ConversableAgent):
     """Swarm agent for participating in a swarm.
 
@@ -609,6 +629,7 @@ class SwarmAgent(ConversableAgent):
             raise TypeError("Functions must be a callable or a list of callables")
         """
 
+        """ MS MOVED TO _establish_swarm_agent
         self.after_work = None
 
         # Used in the tool execution agent to transfer to the next agent
@@ -617,17 +638,20 @@ class SwarmAgent(ConversableAgent):
         # Store nested chats hand offs as we'll establish these in the initiate_swarm_chat
         # List of Dictionaries containing the nested_chats and condition
         self._nested_chat_handoffs = []
+        """
 
         """ MS MOVED
         self.register_update_agent_state_before_reply(update_agent_state_before_reply)
         """
 
+        """ MS MOVED TO _establish_swarm_agent
         # Store conditional functions (and their ON_CONDITION instances) to add/remove later when transitioning to this agent
         self._conditional_functions = {}
 
         # Register the hook to update agent state (except tool executor)
         if name != __TOOL_EXECUTOR_NAME__:
             self.register_hook("update_agent_state", _update_conditional_functions)
+        """
 
     ''' MS MOVED
     def register_update_agent_state_before_reply(self, functions: Optional[Union[list[Callable], Callable]]):
