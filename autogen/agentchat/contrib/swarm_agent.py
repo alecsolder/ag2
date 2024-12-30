@@ -18,14 +18,16 @@ from autogen.oai import OpenAIWrapper
 
 from ..agent import Agent
 from ..chat import ChatResult
-from ..conversable_agent import ConversableAgent
+from ..conversable_agent import __CONTEXT_VARIABLES_PARAM_NAME__, UPDATE_SYSTEM_MESSAGE, ConversableAgent
 from ..groupchat import GroupChat, GroupChatManager
 from ..user_proxy_agent import UserProxyAgent
 
+""" MS REMOVE
 # Parameter name for context variables
 # Use the value in functions and they will be substituted with the context variables:
 # e.g. def my_function(context_variables: Dict[str, Any], my_other_parameters: Any) -> Any:
 __CONTEXT_VARIABLES_PARAM_NAME__ = "context_variables"
+"""
 
 __TOOL_EXECUTOR_NAME__ = "Tool_Execution"
 
@@ -84,6 +86,7 @@ class ON_CONDITION:
             assert isinstance(self.available, (Callable, str)), "'available' must be a callable or a string"
 
 
+r''' MS REMOVE
 @dataclass
 class UPDATE_SYSTEM_MESSAGE:
     """Update the agent's system message before they reply
@@ -114,6 +117,7 @@ class UPDATE_SYSTEM_MESSAGE:
                 raise ValueError("Update function must return a string")
         else:
             raise ValueError("Update function must be either a string or a callable")
+'''
 
 
 def initiate_swarm_chat(
@@ -379,9 +383,7 @@ class SwarmAgent(ConversableAgent):
 
     SwarmAgent is a subclass of ConversableAgent.
 
-    Additional args:
-        functions (List[Callable]): A list of functions to register with the agent.
-        update_agent_state_before_reply (List[Callable]): A list of functions, including UPDATE_SYSTEM_MESSAGEs, called to update the agent before it replies.
+    TRANSFERRING TO CONVERSABLEAGENT - INTERFACE SHOULD BE IDENTICAL
     """
 
     def __init__(
@@ -409,9 +411,12 @@ class SwarmAgent(ConversableAgent):
             llm_config=llm_config,
             description=description,
             code_execution_config=code_execution_config,
+            functions=functions,
+            update_agent_state_before_reply=update_agent_state_before_reply,
             **kwargs,
         )
 
+        """ MS REMOVE
         if isinstance(functions, list):
             if not all(isinstance(func, Callable) for func in functions):
                 raise TypeError("All elements in the functions list must be callable")
@@ -420,6 +425,7 @@ class SwarmAgent(ConversableAgent):
             self.add_single_function(functions)
         elif functions is not None:
             raise TypeError("Functions must be a callable or a list of callables")
+        """
 
         self.after_work = None
 
@@ -430,7 +436,9 @@ class SwarmAgent(ConversableAgent):
         # List of Dictionaries containing the nested_chats and condition
         self._nested_chat_handoffs = []
 
+        """ MS REMOVE
         self.register_update_agent_state_before_reply(update_agent_state_before_reply)
+        """
 
         # Store conditional functions (and their ON_CONDITION instances) to add/remove later when transitioning to this agent
         self._conditional_functions = {}
@@ -439,6 +447,7 @@ class SwarmAgent(ConversableAgent):
         if name != __TOOL_EXECUTOR_NAME__:
             self.register_hook("update_agent_state", self._update_conditional_functions)
 
+    ''' MS REMOVE
     def register_update_agent_state_before_reply(self, functions: Optional[Union[list[Callable], Callable]]):
         """
         Register functions that will be called when the agent is selected and before it speaks.
@@ -486,6 +495,7 @@ class SwarmAgent(ConversableAgent):
 
             else:
                 self.register_hook(hookable_method="update_agent_state", hook=func)
+    '''
 
     def _set_to_tool_execution(self):
         """Set to a special instance of SwarmAgent that is responsible for executing tool calls from other swarm agents.
@@ -497,8 +507,10 @@ class SwarmAgent(ConversableAgent):
         self._reply_func_list.clear()
         self.register_reply([Agent, None], SwarmAgent.generate_swarm_tool_reply)
 
+    """ MS REMOVE - NOT TRANSFERRED
     def __str__(self):
         return f"SwarmAgent --> {self.name}"
+    """
 
     def register_hand_off(
         self,
@@ -566,7 +578,7 @@ class SwarmAgent(ConversableAgent):
                 raise ValueError("Invalid hand off condition, must be either ON_CONDITION or AFTER_WORK")
 
     @staticmethod
-    def _update_conditional_functions(agent: Agent, messages: Optional[list[dict]] = None) -> None:
+    def _update_conditional_functions(agent: ConversableAgent, messages: Optional[list[dict]] = None) -> None:
         """Updates the agent's functions based on the ON_CONDITION's available condition."""
         for func_name, (func, on_condition) in agent._conditional_functions.items():
             is_available = True
@@ -579,7 +591,7 @@ class SwarmAgent(ConversableAgent):
 
             if is_available:
                 if func_name not in agent._function_map:
-                    agent.add_single_function(func, func_name, on_condition.condition)
+                    agent._add_single_function(func, func_name, on_condition.condition)
             else:
                 # Remove function using the stored name
                 if func_name in agent._function_map:
@@ -666,6 +678,7 @@ class SwarmAgent(ConversableAgent):
             return True, tool_message
         return False, None
 
+    ''' MS REMOVE
     def add_single_function(self, func: Callable, name=None, description=""):
         """Add a single function to the agent, removing context variables for LLM use"""
         if name:
@@ -696,10 +709,13 @@ class SwarmAgent(ConversableAgent):
 
         self.update_tool_signature(f_no_context, is_remove=False)
         self.register_function({func._name: func})
+    '''
 
+    """ MS REMOVE
     def add_functions(self, func_list: list[Callable]):
         for func in func_list:
             self.add_single_function(func)
+    """
 
     @staticmethod
     def process_nested_chat_carryover(

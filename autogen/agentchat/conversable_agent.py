@@ -13,6 +13,8 @@ import logging
 import re
 import warnings
 from collections import defaultdict
+from dataclasses import dataclass
+from inspect import signature
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Type, TypeVar, Union
 
 from openai import BadRequestError
@@ -47,6 +49,43 @@ __all__ = ("ConversableAgent",)
 logger = logging.getLogger(__name__)
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+# Parameter name for context variables
+# Use the value in functions and they will be substituted with the context variables:
+# e.g. def my_function(context_variables: Dict[str, Any], my_other_parameters: Any) -> Any:
+__CONTEXT_VARIABLES_PARAM_NAME__ = "context_variables"
+
+
+@dataclass
+class UPDATE_SYSTEM_MESSAGE:
+    """Update the agent's system message before they reply
+
+    Args:
+        update_function: The string or function to update the agent's system message. Can be a string or a Callable.
+            If a string, it will be used as a template and substitute the context variables.
+            If a Callable, it should have the signature:
+                def my_update_function(agent: ConversableAgent, messages: List[Dict[str, Any]]) -> str
+    """
+
+    update_function: Union[Callable, str]
+
+    def __post_init__(self):
+        if isinstance(self.update_function, str):
+            # find all {var} in the string
+            vars = re.findall(r"\{(\w+)\}", self.update_function)
+            if len(vars) == 0:
+                warnings.warn("Update function string contains no variables. This is probably unintended.")
+
+        elif isinstance(self.update_function, Callable):
+            sig = signature(self.update_function)
+            if len(sig.parameters) != 2:
+                raise ValueError(
+                    "Update function must accept two parameters of type ConversableAgent and List[Dict[str Any]], respectively"
+                )
+            if sig.return_annotation != str:
+                raise ValueError("Update function must return a string")
+        else:
+            raise ValueError("Update function must be either a string or a callable")
 
 
 class ConversableAgent(LLMAgent):
@@ -85,6 +124,10 @@ class ConversableAgent(LLMAgent):
         chat_messages: Optional[dict[Agent, list[dict]]] = None,
         silent: Optional[bool] = None,
         context_variables: Optional[dict[str, Any]] = None,
+        functions: Union[list[Callable], Callable] = None,
+        update_agent_state_before_reply: Optional[
+            Union[list[Union[Callable, UPDATE_SYSTEM_MESSAGE]], Callable, UPDATE_SYSTEM_MESSAGE]
+        ] = None,
     ):
         """
         Args:
@@ -139,6 +182,7 @@ class ConversableAgent(LLMAgent):
                 Note: Will maintain a reference to the passed in context variables (enabling a shared context)
                 Only used in Swarms at this stage:
                 https://docs.ag2.ai/docs/reference/agentchat/contrib/swarm_agent
+            functions (List[Callable]): A list of functions to register with the agent.
         """
         # we change code_execution_config below and we have to make sure we don't change the input
         # in case of UserProxyAgent, without this we could even change the default value {}
@@ -161,6 +205,7 @@ class ConversableAgent(LLMAgent):
             else (lambda x: content_str(x.get("content")) == "TERMINATE")
         )
         self.silent = silent
+
         # Take a copy to avoid modifying the given dict
         if isinstance(llm_config, dict):
             try:
@@ -198,6 +243,16 @@ class ConversableAgent(LLMAgent):
         self.register_reply([Agent, None], ConversableAgent.a_generate_oai_reply, ignore_async_in_sync_chat=True)
 
         self._context_variables = context_variables if context_variables is not None else {}
+
+        # Register functions to the agent
+        if isinstance(functions, list):
+            if not all(isinstance(func, Callable) for func in functions):
+                raise TypeError("All elements in the functions list must be callable")
+            self._add_functions(functions)
+        elif isinstance(functions, Callable):
+            self._add_single_function(functions)
+        elif functions is not None:
+            raise TypeError("Functions must be a callable or a list of callables")
 
         # Setting up code execution.
         # Do not register code execution reply if code execution is disabled.
@@ -265,6 +320,102 @@ class ConversableAgent(LLMAgent):
             "process_message_before_send": [],
             "update_agent_state": [],
         }
+
+        # Associate agent update state hooks
+        self._register_update_agent_state_before_reply(update_agent_state_before_reply)
+
+    def _add_functions(self, func_list: list[Callable]):
+        """Add (Register) a list of functions to the agent
+
+        Args:
+            func_list (list[Callable]): A list of functions to register with the agent."""
+        for func in func_list:
+            self._add_single_function(func)
+
+    def _add_single_function(self, func: Callable, name: Optional[str] = None, description: Optional[str] = ""):
+        """Add a single function to the agent, removing context variables for LLM use.
+
+        Args:
+            func (Callable): The function to register.
+            name (str): The name of the function. If not provided, the function's name will be used.
+            description (str): The description of the function, used by the LLM. If not provided, the function's docstring will be used.
+        """
+        if name:
+            func._name = name
+        else:
+            func._name = func.__name__
+
+        if description:
+            func._description = description
+        else:
+            # Use function's docstring, strip whitespace, fall back to empty string
+            func._description = (func.__doc__ or "").strip()
+
+        f = get_function_schema(func, name=func._name, description=func._description)
+
+        # Remove context_variables parameter from function schema
+        f_no_context = f.copy()
+        if __CONTEXT_VARIABLES_PARAM_NAME__ in f_no_context["function"]["parameters"]["properties"]:
+            del f_no_context["function"]["parameters"]["properties"][__CONTEXT_VARIABLES_PARAM_NAME__]
+        if "required" in f_no_context["function"]["parameters"]:
+            required = f_no_context["function"]["parameters"]["required"]
+            f_no_context["function"]["parameters"]["required"] = [
+                param for param in required if param != __CONTEXT_VARIABLES_PARAM_NAME__
+            ]
+            # If required list is empty, remove it
+            if not f_no_context["function"]["parameters"]["required"]:
+                del f_no_context["function"]["parameters"]["required"]
+
+        self.update_tool_signature(f_no_context, is_remove=False)
+        self.register_function({func._name: func})
+
+    def _register_update_agent_state_before_reply(self, functions: Optional[Union[list[Callable], Callable]]):
+        """
+        Register functions that will be called when the agent is selected and before it speaks.
+        You can add your own validation or precondition functions here.
+
+        Args:
+            functions (List[Callable[[], None]]): A list of functions to be registered. Each function
+                is called when the agent is selected and before it speaks.
+        """
+        if functions is None:
+            return
+        if not isinstance(functions, list) and type(functions) not in [UPDATE_SYSTEM_MESSAGE, Callable]:
+            raise ValueError("functions must be a list of callables")
+
+        if not isinstance(functions, list):
+            functions = [functions]
+
+        for func in functions:
+            if isinstance(func, UPDATE_SYSTEM_MESSAGE):
+
+                # Wrapper function that allows this to be used in the update_agent_state hook
+                # Its primary purpose, however, is just to update the agent's system message
+                # Outer function to create a closure with the update function
+                def create_wrapper(update_func: UPDATE_SYSTEM_MESSAGE):
+                    def update_system_message_wrapper(
+                        agent: ConversableAgent, messages: list[dict[str, Any]]
+                    ) -> list[dict[str, Any]]:
+                        if isinstance(update_func.update_function, str):
+                            # Templates like "My context variable passport is {passport}" will
+                            # use the context_variables for substitution
+                            sys_message = OpenAIWrapper.instantiate(
+                                template=update_func.update_function,
+                                context=agent._context_variables,
+                                allow_format_str_template=True,
+                            )
+                        else:
+                            sys_message = update_func.update_function(agent, messages)
+
+                        agent.update_system_message(sys_message)
+                        return messages
+
+                    return update_system_message_wrapper
+
+                self.register_hook(hookable_method="update_agent_state", hook=create_wrapper(func))
+
+            else:
+                self.register_hook(hookable_method="update_agent_state", hook=func)
 
     def _validate_llm_config(self, llm_config):
         assert llm_config in (None, False) or isinstance(
