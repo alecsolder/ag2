@@ -22,7 +22,7 @@ from ..conversable_agent import __CONTEXT_VARIABLES_PARAM_NAME__, UPDATE_SYSTEM_
 from ..groupchat import GroupChat, GroupChatManager
 from ..user_proxy_agent import UserProxyAgent
 
-""" MS REMOVE
+""" MS MOVED TO CONVERSABLEAGENT
 # Parameter name for context variables
 # Use the value in functions and they will be substituted with the context variables:
 # e.g. def my_function(context_variables: Dict[str, Any], my_other_parameters: Any) -> Any:
@@ -43,12 +43,12 @@ class AFTER_WORK:
     """Handles the next step in the conversation when an agent doesn't suggest a tool call or a handoff
 
     Args:
-        agent: The agent to hand off to or the after work option. Can be a SwarmAgent, a string name of a SwarmAgent, an AfterWorkOption, or a Callable.
+        agent: The agent to hand off to or the after work option. Can be a ConversableAgent, a string name of a ConversableAgent, an AfterWorkOption, or a Callable.
             The Callable signature is:
-                def my_after_work_func(last_speaker: SwarmAgent, messages: List[Dict[str, Any]], groupchat: GroupChat) -> Union[AfterWorkOption, SwarmAgent, str]:
+                def my_after_work_func(last_speaker: ConversableAgent, messages: List[Dict[str, Any]], groupchat: GroupChat) -> Union[AfterWorkOption, ConversableAgent, str]:
     """
 
-    agent: Union[AfterWorkOption, "SwarmAgent", str, Callable]
+    agent: Union[AfterWorkOption, ConversableAgent, str, Callable]
 
     def __post_init__(self):
         if isinstance(self.agent, str):
@@ -60,7 +60,7 @@ class ON_CONDITION:
     """Defines a condition for transitioning to another agent or nested chats
 
     Args:
-        target: The agent to hand off to or the nested chat configuration. Can be a SwarmAgent or a Dict.
+        target: The agent to hand off to or the nested chat configuration. Can be a ConversableAgent or a Dict.
             If a Dict, it should follow the convention of the nested chat configuration, with the exception of a carryover configuration which is unique to Swarms.
             Swarm Nested chat documentation: https://docs.ag2.ai/docs/topics/swarm#registering-handoffs-to-a-nested-chat
         condition: The condition for transitioning to the target agent, evaluated by the LLM to determine whether to call the underlying function/tool which does the transition.
@@ -68,16 +68,16 @@ class ON_CONDITION:
             If a string, it will look up the value of the context variable with that name, which should be a bool.
     """
 
-    target: Union["SwarmAgent", dict[str, Any]] = None
+    target: Union[ConversableAgent, dict[str, Any]] = None
     condition: str = ""
     available: Optional[Union[Callable, str]] = None
 
     def __post_init__(self):
         # Ensure valid types
         if self.target is not None:
-            assert isinstance(self.target, SwarmAgent) or isinstance(
+            assert isinstance(self.target, ConversableAgent) or isinstance(
                 self.target, dict
-            ), "'target' must be a SwarmAgent or a Dict"
+            ), "'target' must be a ConversableAgent or a dict"
 
         # Ensure they have a condition
         assert isinstance(self.condition, str) and self.condition.strip(), "'condition' must be a non-empty string"
@@ -86,7 +86,7 @@ class ON_CONDITION:
             assert isinstance(self.available, (Callable, str)), "'available' must be a callable or a string"
 
 
-r''' MS REMOVE
+r''' MS MOVED TO CONVERSABLEAGENT
 @dataclass
 class UPDATE_SYSTEM_MESSAGE:
     """Update the agent's system message before they reply
@@ -170,7 +170,8 @@ def initiate_swarm_chat(
         name=__TOOL_EXECUTOR_NAME__,
         system_message="Tool Execution",
     )
-    tool_execution._set_to_tool_execution()
+
+    _set_to_tool_execution(tool_execution)
 
     # Update tool execution agent with all the functions from all the agents
     for agent in agents:
@@ -273,12 +274,12 @@ def initiate_swarm_chat(
             )
 
             # After the nested chat is complete, transfer back to the parent agent
-            nested_chat_agent.register_hand_off(AFTER_WORK(agent=agent))
+            register_hand_off(nested_chat_agent, AFTER_WORK(agent=agent))
 
             nested_chat_agents.append(nested_chat_agent)
 
             # Nested chat is triggered through an agent transfer to this nested chat agent
-            agent.register_hand_off(ON_CONDITION(nested_chat_agent, condition, available))
+            register_hand_off(agent, ON_CONDITION(nested_chat_agent, condition, available))
 
     nested_chat_agents = []
     for agent in agents:
@@ -363,12 +364,12 @@ class SwarmResult(BaseModel):
 
     Args:
         values (str): The result values as a string.
-        agent (SwarmAgent): The swarm agent instance, if applicable.
+        agent (ConversableAgent): The agent instance, if applicable.
         context_variables (dict): A dictionary of context variables.
     """
 
     values: str = ""
-    agent: Optional[Union["SwarmAgent", str]] = None
+    agent: Optional[Union[ConversableAgent, str]] = None
     context_variables: dict[str, Any] = {}
 
     class Config:  # Add this inner class
@@ -376,6 +377,187 @@ class SwarmResult(BaseModel):
 
     def __str__(self):
         return self.values
+
+
+def _set_to_tool_execution(agent: ConversableAgent):
+    """Set to a special instance of ConversableAgent that is responsible for executing tool calls from other swarm agents.
+    This agent will be used internally and should not be visible to the user.
+
+    It will execute the tool calls and update the referenced context_variables and next_agent accordingly.
+    """
+    agent._next_agent = None
+    agent._reply_func_list.clear()
+    agent.register_reply([Agent, None], _generate_swarm_tool_reply)
+
+
+def register_hand_off(
+    agent: ConversableAgent,
+    hand_to: Union[list[Union[ON_CONDITION, AFTER_WORK]], ON_CONDITION, AFTER_WORK],
+):
+    """Register a function to hand off to another agent.
+
+    Args:
+        agent: The agent to register the hand off with.
+        hand_to: A list of ON_CONDITIONs and an, optional, AFTER_WORK condition
+
+    Hand off template:
+    def transfer_to_agent_name() -> ConversableAgent:
+        return agent_name
+    1. register the function with the agent
+    2. register the schema with the agent, description set to the condition
+    """
+    # Ensure that hand_to is a list or ON_CONDITION or AFTER_WORK
+    if not isinstance(hand_to, (list, ON_CONDITION, AFTER_WORK)):
+        raise ValueError("hand_to must be a list of ON_CONDITION or AFTER_WORK")
+
+    if isinstance(hand_to, (ON_CONDITION, AFTER_WORK)):
+        hand_to = [hand_to]
+
+    for transit in hand_to:
+        if isinstance(transit, AFTER_WORK):
+            assert isinstance(
+                transit.agent, (AfterWorkOption, ConversableAgent, str, Callable)
+            ), "Invalid After Work value"
+            agent.after_work = transit
+        elif isinstance(transit, ON_CONDITION):
+
+            if isinstance(transit.target, ConversableAgent):
+                # Transition to agent
+
+                # Create closure with current loop transit value
+                # to ensure the condition matches the one in the loop
+                def make_transfer_function(current_transit: ON_CONDITION):
+                    def transfer_to_agent() -> ConversableAgent:
+                        return current_transit.target
+
+                    return transfer_to_agent
+
+                transfer_func = make_transfer_function(transit)
+
+                # Store function to add/remove later based on it being 'available'
+                # Function names are made unique and allow multiple ON_CONDITIONS to the same agent
+                base_func_name = f"transfer_{agent.name}_to_{transit.target.name}"
+                func_name = base_func_name
+                count = 2
+                while func_name in agent._conditional_functions:
+                    func_name = f"{base_func_name}_{count}"
+                    count += 1
+
+                # Store function to add/remove later based on it being 'available'
+                agent._conditional_functions[func_name] = (transfer_func, transit)
+
+            elif isinstance(transit.target, dict):
+                # Transition to a nested chat
+                # We will store them here and establish them in the initiate_swarm_chat
+                agent._nested_chat_handoffs.append(
+                    {"nested_chats": transit.target, "condition": transit.condition, "available": transit.available}
+                )
+
+        else:
+            raise ValueError("Invalid hand off condition, must be either ON_CONDITION or AFTER_WORK")
+
+
+@staticmethod
+def _update_conditional_functions(agent: ConversableAgent, messages: Optional[list[dict]] = None) -> None:
+    """Updates the agent's functions based on the ON_CONDITION's available condition."""
+    for func_name, (func, on_condition) in agent._conditional_functions.items():
+        is_available = True
+
+        if on_condition.available is not None:
+            if isinstance(on_condition.available, Callable):
+                is_available = on_condition.available(agent, next(iter(agent.chat_messages.values())))
+            elif isinstance(on_condition.available, str):
+                is_available = agent.get_context(on_condition.available) or False
+
+        if is_available:
+            if func_name not in agent._function_map:
+                agent._add_single_function(func, func_name, on_condition.condition)
+        else:
+            # Remove function using the stored name
+            if func_name in agent._function_map:
+                agent.update_tool_signature(func_name, is_remove=True)
+                del agent._function_map[func_name]
+
+
+def _generate_swarm_tool_reply(
+    agent: ConversableAgent,
+    messages: Optional[list[dict]] = None,
+    sender: Optional[Agent] = None,
+    config: Optional[OpenAIWrapper] = None,
+) -> tuple[bool, dict]:
+    """Pre-processes and generates tool call replies.
+
+    This function:
+    1. Adds context_variables back to the tool call for the function, if necessary.
+    2. Generates the tool calls reply.
+    3. Updates context_variables and next_agent based on the tool call response."""
+
+    if config is None:
+        config = agent
+    if messages is None:
+        messages = agent._oai_messages[sender]
+
+    message = messages[-1]
+    if "tool_calls" in message:
+
+        tool_call_count = len(message["tool_calls"])
+
+        # Loop through tool calls individually (so context can be updated after each function call)
+        next_agent = None
+        tool_responses_inner = []
+        contents = []
+        for index in range(tool_call_count):
+
+            # Deep copy to ensure no changes to messages when we insert the context variables
+            message_copy = copy.deepcopy(message)
+
+            # 1. add context_variables to the tool call arguments
+            tool_call = message_copy["tool_calls"][index]
+
+            if tool_call["type"] == "function":
+                function_name = tool_call["function"]["name"]
+
+                # Check if this function exists in our function map
+                if function_name in agent._function_map:
+                    func = agent._function_map[function_name]  # Get the original function
+
+                    # Inject the context variables into the tool call if it has the parameter
+                    sig = signature(func)
+                    if __CONTEXT_VARIABLES_PARAM_NAME__ in sig.parameters:
+
+                        current_args = json.loads(tool_call["function"]["arguments"])
+                        current_args[__CONTEXT_VARIABLES_PARAM_NAME__] = agent._context_variables
+                        tool_call["function"]["arguments"] = json.dumps(current_args)
+
+            # Ensure we are only executing the one tool at a time
+            message_copy["tool_calls"] = [tool_call]
+
+            # 2. generate tool calls reply
+            _, tool_message = agent.generate_tool_calls_reply([message_copy])
+
+            # 3. update context_variables and next_agent, convert content to string
+            for tool_response in tool_message["tool_responses"]:
+                content = tool_response.get("content")
+                if isinstance(content, SwarmResult):
+                    if content.context_variables != {}:
+                        agent._context_variables.update(content.context_variables)
+                    if content.agent is not None:
+                        next_agent = content.agent
+                elif isinstance(content, Agent):
+                    next_agent = content
+
+                tool_responses_inner.append(tool_response)
+                contents.append(str(tool_response["content"]))
+
+        agent._next_agent = next_agent
+
+        # Put the tool responses and content strings back into the response message
+        # Caters for multiple tool calls
+        tool_message["tool_responses"] = tool_responses_inner
+        tool_message["content"] = "\n".join(contents)
+
+        return True, tool_message
+    return False, None
 
 
 class SwarmAgent(ConversableAgent):
@@ -416,7 +598,7 @@ class SwarmAgent(ConversableAgent):
             **kwargs,
         )
 
-        """ MS REMOVE
+        """ MS MOVED
         if isinstance(functions, list):
             if not all(isinstance(func, Callable) for func in functions):
                 raise TypeError("All elements in the functions list must be callable")
@@ -436,7 +618,7 @@ class SwarmAgent(ConversableAgent):
         # List of Dictionaries containing the nested_chats and condition
         self._nested_chat_handoffs = []
 
-        """ MS REMOVE
+        """ MS MOVED
         self.register_update_agent_state_before_reply(update_agent_state_before_reply)
         """
 
@@ -445,9 +627,9 @@ class SwarmAgent(ConversableAgent):
 
         # Register the hook to update agent state (except tool executor)
         if name != __TOOL_EXECUTOR_NAME__:
-            self.register_hook("update_agent_state", self._update_conditional_functions)
+            self.register_hook("update_agent_state", _update_conditional_functions)
 
-    ''' MS REMOVE
+    ''' MS MOVED
     def register_update_agent_state_before_reply(self, functions: Optional[Union[list[Callable], Callable]]):
         """
         Register functions that will be called when the agent is selected and before it speaks.
@@ -495,8 +677,10 @@ class SwarmAgent(ConversableAgent):
 
             else:
                 self.register_hook(hookable_method="update_agent_state", hook=func)
+
     '''
 
+    ''' MS MOVED OUT
     def _set_to_tool_execution(self):
         """Set to a special instance of SwarmAgent that is responsible for executing tool calls from other swarm agents.
         This agent will be used internally and should not be visible to the user.
@@ -506,12 +690,14 @@ class SwarmAgent(ConversableAgent):
         self._next_agent = None
         self._reply_func_list.clear()
         self.register_reply([Agent, None], SwarmAgent.generate_swarm_tool_reply)
+    '''
 
-    """ MS REMOVE - NOT TRANSFERRED
+    """ MS MOVED - NOT TRANSFERRED
     def __str__(self):
         return f"SwarmAgent --> {self.name}"
     """
 
+    ''' MS MOVED OUT
     def register_hand_off(
         self,
         hand_to: Union[list[Union[ON_CONDITION, AFTER_WORK]], ON_CONDITION, AFTER_WORK],
@@ -576,28 +762,9 @@ class SwarmAgent(ConversableAgent):
 
             else:
                 raise ValueError("Invalid hand off condition, must be either ON_CONDITION or AFTER_WORK")
+    '''
 
-    @staticmethod
-    def _update_conditional_functions(agent: ConversableAgent, messages: Optional[list[dict]] = None) -> None:
-        """Updates the agent's functions based on the ON_CONDITION's available condition."""
-        for func_name, (func, on_condition) in agent._conditional_functions.items():
-            is_available = True
-
-            if on_condition.available is not None:
-                if isinstance(on_condition.available, Callable):
-                    is_available = on_condition.available(agent, next(iter(agent.chat_messages.values())))
-                elif isinstance(on_condition.available, str):
-                    is_available = agent.get_context(on_condition.available) or False
-
-            if is_available:
-                if func_name not in agent._function_map:
-                    agent._add_single_function(func, func_name, on_condition.condition)
-            else:
-                # Remove function using the stored name
-                if func_name in agent._function_map:
-                    agent.update_tool_signature(func_name, is_remove=True)
-                    del agent._function_map[func_name]
-
+    ''' MS MOVED OUT
     def generate_swarm_tool_reply(
         self,
         messages: Optional[list[dict]] = None,
@@ -677,8 +844,9 @@ class SwarmAgent(ConversableAgent):
 
             return True, tool_message
         return False, None
+    '''
 
-    ''' MS REMOVE
+    ''' MS MOVED
     def add_single_function(self, func: Callable, name=None, description=""):
         """Add a single function to the agent, removing context variables for LLM use"""
         if name:
@@ -711,12 +879,13 @@ class SwarmAgent(ConversableAgent):
         self.register_function({func._name: func})
     '''
 
-    """ MS REMOVE
+    """ MS MOVED
     def add_functions(self, func_list: list[Callable]):
         for func in func_list:
             self.add_single_function(func)
     """
 
+    ''' MS MOVED TO CONVERSABLEAGENT
     @staticmethod
     def process_nested_chat_carryover(
         chat: dict[str, Any],
@@ -812,7 +981,9 @@ class SwarmAgent(ConversableAgent):
             carry_over_message = concat_carryover(chat_message, carry_over_message_result)
 
         chat["message"] = carry_over_message
+    '''
 
+    ''' MS MOVED TO CONVERSABLEAGENT
     @staticmethod
     def _summary_from_nested_chats(
         chat_queue: list[dict[str, Any]], recipient: Agent, messages: Union[str, Callable], sender: Agent, config: Any
@@ -852,7 +1023,8 @@ class SwarmAgent(ConversableAgent):
             chat_queue[0]["message"] = original_chat_queue_message
 
         return True, res[-1].summary
+    '''
 
 
 # Forward references for SwarmAgent in SwarmResult
-SwarmResult.update_forward_refs()
+# SwarmResult.update_forward_refs()

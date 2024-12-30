@@ -573,6 +573,102 @@ class ConversableAgent(LLMAgent):
         return chat_to_run
 
     @staticmethod
+    def _process_nested_chat_carryover(
+        chat: dict[str, Any],
+        recipient: Agent,
+        messages: list[dict[str, Any]],
+        sender: Agent,
+        config: Any,
+        trim_n_messages: int = 0,
+    ) -> None:
+        """Process carryover messages for a nested chat (typically for the first chat of a swarm)
+
+        The carryover_config key is a dictionary containing:
+            "summary_method": The method to use to summarise the messages, can be "all", "last_msg", "reflection_with_llm" or a Callable
+            "summary_args": Optional arguments for the summary method
+
+        Supported carryover 'summary_methods' are:
+            "all" - all messages will be incorporated
+            "last_msg" - the last message will be incorporated
+            "reflection_with_llm" - an llm will summarise all the messages and the summary will be incorporated as a single message
+            Callable - a callable with the signature: my_method(agent: ConversableAgent, messages: List[Dict[str, Any]]) -> str
+
+        Args:
+            chat: The chat dictionary containing the carryover configuration
+            recipient: The recipient agent
+            messages: The messages from the parent chat
+            sender: The sender agent
+            trim_n_messages: The number of latest messages to trim from the messages list
+        """
+
+        def concat_carryover(chat_message: str, carryover_message: Union[str, list[dict[str, Any]]]) -> str:
+            """Concatenate the carryover message to the chat message."""
+            prefix = f"{chat_message}\n" if chat_message else ""
+
+            if isinstance(carryover_message, str):
+                content = carryover_message
+            elif isinstance(carryover_message, list):
+                content = "\n".join(
+                    msg["content"] for msg in carryover_message if "content" in msg and msg["content"] is not None
+                )
+            else:
+                raise ValueError("Carryover message must be a string or a list of dictionaries")
+
+            return f"{prefix}Context:\n{content}"
+
+        carryover_config = chat["carryover_config"]
+
+        if "summary_method" not in carryover_config:
+            raise ValueError("Carryover configuration must contain a 'summary_method' key")
+
+        carryover_summary_method = carryover_config["summary_method"]
+        carryover_summary_args = carryover_config.get("summary_args") or {}
+
+        chat_message = ""
+        message = chat.get("message")
+
+        # If the message is a callable, run it and get the result
+        if message:
+            chat_message = message(recipient, messages, sender, config) if callable(message) else message
+
+        # deep copy and trim the latest messages
+        content_messages = copy.deepcopy(messages)
+        content_messages = content_messages[:-trim_n_messages]
+
+        if carryover_summary_method == "all":
+            # Put a string concatenated value of all parent messages into the first message
+            # (e.g. message = <first nested chat message>\nContext: \n<chat message 1>\n<chat message 2>\n...)
+            carry_over_message = concat_carryover(chat_message, content_messages)
+
+        elif carryover_summary_method == "last_msg":
+            # (e.g. message = <first nested chat message>\nContext: \n<last chat message>)
+            carry_over_message = concat_carryover(chat_message, content_messages[-1]["content"])
+
+        elif carryover_summary_method == "reflection_with_llm":
+            # (e.g. message = <first nested chat message>\nContext: \n<llm summary>)
+
+            # Add the messages to the nested chat agent for reflection (we'll clear after reflection)
+            chat["recipient"]._oai_messages[sender] = content_messages
+
+            carry_over_message_llm = ConversableAgent._reflection_with_llm_as_summary(
+                sender=sender,
+                recipient=chat["recipient"],  # Chat recipient LLM config will be used for the reflection
+                summary_args=carryover_summary_args,
+            )
+
+            recipient._oai_messages[sender] = []
+
+            carry_over_message = concat_carryover(chat_message, carry_over_message_llm)
+
+        elif isinstance(carryover_summary_method, Callable):
+            # (e.g. message = <first nested chat message>\nContext: \n<function's return string>)
+            carry_over_message_result = carryover_summary_method(recipient, content_messages, carryover_summary_args)
+
+            carry_over_message = concat_carryover(chat_message, carry_over_message_result)
+
+        chat["message"] = carry_over_message
+
+    @staticmethod
     def _summary_from_nested_chats(
         chat_queue: list[dict[str, Any]], recipient: Agent, messages: Union[str, Callable], sender: Agent, config: Any
     ) -> tuple[bool, Union[str, None]]:
@@ -582,13 +678,35 @@ class ConversableAgent(LLMAgent):
 
         It extracts and returns a summary from the nested chat based on the "summary_method" in each chat in chat_queue.
 
+        The first chat in the queue can contain a 'carryover_config' which is a dictionary that denotes how to carryover messages from the parent chat into the first chat of the nested chats). Only applies to the first chat.
+            e.g.: carryover_summarize_chat_config = {"summary_method": "reflection_with_llm", "summary_args": None}
+            summary_method can be "last_msg", "all", "reflection_with_llm", Callable
+            The Callable signature: my_method(agent: ConversableAgent, messages: List[Dict[str, Any]]) -> str
+            The summary will be concatenated to the message of the first chat in the queue.
+
         Returns:
             Tuple[bool, str]: A tuple where the first element indicates the completion of the chat, and the second element contains the summary of the last chat if any chats were initiated.
         """
+        # Carryover configuration allowed on the first chat in the queue only, trim the last two messages specifically for swarm nested chat carryover as these are the messages for the transition to the nested chat agent
+        restore_chat_queue_message = False
+        if len(chat_queue) > 0 and "carryover_config" in chat_queue[0]:
+            if "message" in chat_queue[0]:
+                # As we're updating the message in the nested chat queue, we need to restore it after finishing this nested chat.
+                restore_chat_queue_message = True
+                original_chat_queue_message = chat_queue[0]["message"]
+
+            # TODO Check the trimming required if not a swarm chat, it may not be 2 because other chats don't have the swarm transition messages.
+            ConversableAgent._process_nested_chat_carryover(chat_queue[0], recipient, messages, sender, config, 2)
+
         chat_to_run = ConversableAgent._get_chats_to_run(chat_queue, recipient, messages, sender, config)
         if not chat_to_run:
             return True, None
         res = initiate_chats(chat_to_run)
+
+        # We need to restore the chat queue message if it has been modified so that it will be the original message for subsequent uses
+        if restore_chat_queue_message:
+            chat_queue[0]["message"] = original_chat_queue_message
+
         return True, res[-1].summary
 
     @staticmethod
@@ -601,14 +719,36 @@ class ConversableAgent(LLMAgent):
 
         It extracts and returns a summary from the nested chat based on the "summary_method" in each chat in chat_queue.
 
+        The first chat in the queue can contain a 'carryover_config' which is a dictionary that denotes how to carryover messages from the parent chat into the first chat of the nested chats). Only applies to the first chat.
+            e.g.: carryover_summarize_chat_config = {"summary_method": "reflection_with_llm", "summary_args": None}
+            summary_method can be "last_msg", "all", "reflection_with_llm", Callable
+            The Callable signature: my_method(agent: ConversableAgent, messages: List[Dict[str, Any]]) -> str
+            The summary will be concatenated to the message of the first chat in the queue.
+
         Returns:
             Tuple[bool, str]: A tuple where the first element indicates the completion of the chat, and the second element contains the summary of the last chat if any chats were initiated.
         """
+        # Carryover configuration allowed on the first chat in the queue only, trim the last two messages specifically for swarm nested chat carryover as these are the messages for the transition to the nested chat agent
+        restore_chat_queue_message = False
+        if len(chat_queue) > 0 and "carryover_config" in chat_queue[0]:
+            if "message" in chat_queue[0]:
+                # As we're updating the message in the nested chat queue, we need to restore it after finishing this nested chat.
+                restore_chat_queue_message = True
+                original_chat_queue_message = chat_queue[0]["message"]
+
+            # TODO Check the trimming required if not a swarm chat, it may not be 2 because other chats don't have the swarm transition messages.
+            ConversableAgent._process_nested_chat_carryover(chat_queue[0], recipient, messages, sender, config, 2)
+
         chat_to_run = ConversableAgent._get_chats_to_run(chat_queue, recipient, messages, sender, config)
         if not chat_to_run:
             return True, None
         res = await a_initiate_chats(chat_to_run)
         index_of_last_chat = chat_to_run[-1]["chat_id"]
+
+        # We need to restore the chat queue message if it has been modified so that it will be the original message for subsequent uses
+        if restore_chat_queue_message:
+            chat_queue[0]["message"] = original_chat_queue_message
+
         return True, res[index_of_last_chat].summary
 
     def register_nested_chats(
