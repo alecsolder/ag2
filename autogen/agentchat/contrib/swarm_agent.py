@@ -11,7 +11,6 @@ from typing import Any, Callable, Optional, Union
 
 from pydantic import BaseModel
 
-from autogen.function_utils import get_function_schema
 from autogen.oai import OpenAIWrapper
 
 from ..agent import Agent
@@ -20,7 +19,8 @@ from ..conversable_agent import __CONTEXT_VARIABLES_PARAM_NAME__, ConversableAge
 from ..groupchat import GroupChat, GroupChatManager
 from ..user_proxy_agent import UserProxyAgent
 
-__TOOL_EXECUTOR_NAME__ = "Tool_Execution"
+# Created tool executor's name
+__TOOL_EXECUTOR_NAME__ = "_Swarm_Tool_Executor"
 
 
 class AfterWorkOption(Enum):
