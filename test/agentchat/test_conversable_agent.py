@@ -616,7 +616,7 @@ def test__wrap_function_sync():
 
     assert (
         currency_calculator(base={"currency": "USD", "amount": 110.11}, quote_currency="EUR")
-        == '{"currency": "EUR", "amount": 100.1}'
+        == '{"currency":"EUR","amount":100.1}'
     )
 
     assert not inspect.iscoroutinefunction(currency_calculator)
@@ -654,7 +654,7 @@ async def test__wrap_function_async():
 
     assert (
         await currency_calculator(base={"currency": "USD", "amount": 110.11}, quote_currency="EUR")
-        == '{"currency": "EUR", "amount": 100.1}'
+        == '{"currency":"EUR","amount":100.1}'
     )
 
     assert inspect.iscoroutinefunction(currency_calculator)

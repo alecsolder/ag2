@@ -68,7 +68,7 @@ def test_after_work_initialization():
     after_work = AFTER_WORK("TERMINATE")
     assert after_work.agent == AfterWorkOption.TERMINATE
 
-    # Test with SwarmAgent
+    # Test with ConversableAgent
     agent = ConversableAgent("test")
     after_work = AFTER_WORK(agent)
     assert after_work.agent == agent
@@ -431,7 +431,7 @@ def test_invalid_parameters():
 
 
 def test_non_swarm_in_hand_off():
-    """Test that SwarmAgents in the group chat are the only agents in hand-offs"""
+    """Test that agents in the group chat are the only agents in hand-offs"""
 
     agent1 = ConversableAgent("agent1")
     bad_agent = NotConversableAgent("bad_agent")
@@ -566,7 +566,7 @@ def test_string_agent_params_for_transfer():
         value = "Hello, World!"
         return SwarmResult(values=value, context_variables=context_variables, agent="agent_2")
 
-    # Create SwarmAgent instances
+    # Create agent instances
     agent_1 = ConversableAgent(
         name="agent_1",
         system_message="Your task is to call hello_world() function.",

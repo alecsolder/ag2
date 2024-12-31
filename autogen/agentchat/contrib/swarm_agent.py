@@ -86,7 +86,7 @@ def _establish_swarm_agent(agent: ConversableAgent):
 
     def _swarm_agent_str(self: ConversableAgent) -> str:
         """Customise the __str__ method to show the agent name for transition messages."""
-        return f"SwarmAgent --> {self.name}"
+        return f"Swarm agent --> {self.name}"
 
     agent._swarm_after_work = None
 
