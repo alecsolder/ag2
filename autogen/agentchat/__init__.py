@@ -19,9 +19,10 @@ from .contrib.swarm_agent import (
     ON_CONDITION,
     UPDATE_SYSTEM_MESSAGE,
     AfterWorkOption,
-    SwarmAgent,
     SwarmResult,
+    a_initiate_swarm_chat,
     initiate_swarm_chat,
+    register_hand_off,
 )
 from .conversable_agent import ConversableAgent, register_function
 from .groupchat import GroupChat, GroupChatManager
@@ -40,11 +41,12 @@ __all__ = [
     "gather_usage_summary",
     "ChatResult",
     "initiate_swarm_chat",
-    "SwarmAgent",
+    "a_initiate_swarm_chat",
     "SwarmResult",
     "ON_CONDITION",
     "AFTER_WORK",
     "AfterWorkOption",
+    "register_hand_off",
     "UPDATE_SYSTEM_MESSAGE",
     "ReasoningAgent",
     "visualize_tree",
