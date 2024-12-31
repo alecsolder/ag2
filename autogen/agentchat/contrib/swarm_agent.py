@@ -651,7 +651,6 @@ def register_hand_off(
             raise ValueError("Invalid hand off condition, must be either ON_CONDITION or AFTER_WORK")
 
 
-@staticmethod
 def _update_conditional_functions(agent: ConversableAgent, messages: Optional[list[dict]] = None) -> None:
     """Updates the agent's functions based on the ON_CONDITION's available condition."""
     for func_name, (func, on_condition) in agent._swarm_conditional_functions.items():
