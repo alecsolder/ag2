@@ -2,14 +2,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 import copy
-import inspect
 import json
-import re
-import warnings
 from dataclasses import dataclass
 from enum import Enum
 from inspect import signature
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from types import MethodType
+from typing import Any, Callable, Optional, Union
 
 from pydantic import BaseModel
 
@@ -18,7 +16,7 @@ from autogen.oai import OpenAIWrapper
 
 from ..agent import Agent
 from ..chat import ChatResult
-from ..conversable_agent import __CONTEXT_VARIABLES_PARAM_NAME__, UPDATE_SYSTEM_MESSAGE, ConversableAgent
+from ..conversable_agent import __CONTEXT_VARIABLES_PARAM_NAME__, ConversableAgent
 from ..groupchat import GroupChat, GroupChatManager
 from ..user_proxy_agent import UserProxyAgent
 
@@ -86,6 +84,10 @@ def _establish_swarm_agent(agent: ConversableAgent):
         agent (ConversableAgent): The agent to establish as a swarm agent.
     """
 
+    def _swarm_agent_str(self: ConversableAgent) -> str:
+        """Customise the __str__ method to show the agent name for transition messages."""
+        return f"SwarmAgent --> {self.name}"
+
     agent._swarm_after_work = None
 
     # Store nested chats hand offs as we'll establish these in the initiate_swarm_chat
@@ -97,6 +99,8 @@ def _establish_swarm_agent(agent: ConversableAgent):
 
     # Register the hook to update agent state (except tool executor)
     agent.register_hook("update_agent_state", _update_conditional_functions)
+
+    agent._get_display_name = MethodType(_swarm_agent_str, agent)
 
     # Mark this agent as established as a swarm agent
     agent._swarm_is_established = True

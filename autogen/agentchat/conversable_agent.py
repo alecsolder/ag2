@@ -324,6 +324,19 @@ class ConversableAgent(LLMAgent):
         # Associate agent update state hooks
         self._register_update_agent_state_before_reply(update_agent_state_before_reply)
 
+    def _get_display_name(self):
+        """Get the string representation of the agent.
+
+        If you would like to change the standard string representation for an
+        instance of ConversableAgent, you can point it to another function.
+        In this example a function called _swarm_agent_str that returns a string:
+        agent._get_display_name = MethodType(_swarm_agent_str, agent)
+        """
+        return self.name
+
+    def __str__(self):
+        return self._get_display_name()
+
     def _add_functions(self, func_list: list[Callable]):
         """Add (Register) a list of functions to the agent
 
