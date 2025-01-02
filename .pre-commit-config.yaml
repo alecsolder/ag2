@@ -91,10 +91,10 @@ repos:
         entry: pylint
         language: system
         types: [python]
-        args:
+        args: # Optional: arguments for Pylint; remove or modify as needed
           [
             '--errors-only',
             '--disable=C,R',
             '--disable=import-error',
-          ]  # Optional: arguments for Pylint; remove or modify as needed
+          ]
         additional_dependencies: []  # Optional: add any additional dependencies (e.g., plugins)
