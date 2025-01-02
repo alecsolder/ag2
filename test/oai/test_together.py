@@ -21,7 +21,7 @@ except ImportError:
 
 
 # Fixtures for mock data
-@pytest.fixture
+@pytest.fixture()
 def mock_response():
     class MockResponse:
         def __init__(self, text, choices, usage, cost, model):
@@ -34,7 +34,7 @@ def mock_response():
     return MockResponse
 
 
-@pytest.fixture
+@pytest.fixture()
 def together_client():
     return TogetherClient(api_key="fake_api_key")
 
@@ -42,7 +42,6 @@ def together_client():
 # Test initialization and configuration
 @pytest.mark.skipif(skip, reason="Together.AI dependency is not installed")
 def test_initialization():
-
     # Missing any api_key
     with pytest.raises(AssertionError) as assertinfo:
         TogetherClient()  # Should raise an AssertionError due to missing api_key
@@ -198,7 +197,6 @@ def test_create_response(mock_create, together_client):
 @pytest.mark.skipif(skip, reason="Together.AI dependency is not installed")
 @patch("autogen.oai.together.TogetherClient.create")
 def test_create_response_with_tool_call(mock_create, together_client):
-
     # Define the mock response directly within the patch
     mock_function = MagicMock(name="currency_calculator")
     mock_function.name = "currency_calculator"

@@ -7,6 +7,7 @@
 """Create an OpenAI-compatible client using Together.AI's API.
 
 Example:
+-------
     ```python
     llm_config={
         "config_list": [{
@@ -23,6 +24,7 @@ Install Together.AI python library using: pip install --upgrade together
 
 Resources:
 - https://docs.together.ai/docs/inference-python
+
 """
 
 from __future__ import annotations
@@ -56,10 +58,12 @@ class TogetherClient:
         """Requires api_key or environment variable to be set
 
         Args:
+        ----
             api_key (str): The API key for using Together.AI (or environment variable TOGETHER_API_KEY needs to be set)
+
         """
         # Ensure we have the api_key upon instantiation
-        self.api_key = kwargs.get("api_key", None)
+        self.api_key = kwargs.get("api_key")
         if not self.api_key:
             self.api_key = os.getenv("TOGETHER_API_KEY")
 
@@ -71,8 +75,7 @@ class TogetherClient:
         ), "Please include the api_key in your config list entry for Together.AI or set the TOGETHER_API_KEY env variable."
 
     def message_retrieval(self, response) -> list:
-        """
-        Retrieve and return a list of strings or a list of Choice.Message from the response.
+        """Retrieve and return a list of strings or a list of Choice.Message from the response.
 
         NOTE: if a list of Choice.Message is returned, it currently needs to contain the fields of OpenAI's ChatCompletion Message object,
         since that is expected for function or tool calling in the rest of the codebase at the moment, unless a custom agent is being used.
@@ -99,7 +102,7 @@ class TogetherClient:
         together_params = {}
 
         # Check that we have what we need to use Together.AI's API
-        together_params["model"] = params.get("model", None)
+        together_params["model"] = params.get("model")
         assert together_params[
             "model"
         ], "Please specify the 'model' in your config list entry to nominate the Together.AI model to use."
@@ -225,7 +228,6 @@ def oai_messages_to_together_messages(messages: list[dict[str, Any]]) -> list[di
     """Convert messages from OAI format to Together.AI format.
     We correct for any specific role orders and types.
     """
-
     together_messages = copy.deepcopy(messages)
 
     # If we have a message with role='tool', which occurs when a function is executed, change it to 'user'
@@ -312,7 +314,6 @@ mixture_costs = {56: 0.6, 176: 1.2, 480: 2.4}
 
 def calculate_together_cost(input_tokens: int, output_tokens: int, model_name: str) -> float:
     """Cost calculation for inference"""
-
     if model_name in chat_lang_code_model_sizes or model_name in mixture_model_sizes:
         cost_per_mil = 0
 
@@ -320,7 +321,7 @@ def calculate_together_cost(input_tokens: int, output_tokens: int, model_name: s
         if model_name in chat_lang_code_model_sizes:
             size_in_b = chat_lang_code_model_sizes[model_name]
 
-            for top_size in chat_lang_code_model_costs.keys():
+            for top_size in chat_lang_code_model_costs:
                 if size_in_b <= top_size:
                     cost_per_mil = chat_lang_code_model_costs[top_size]
                     break
@@ -329,7 +330,7 @@ def calculate_together_cost(input_tokens: int, output_tokens: int, model_name: s
             # Mixture-of-experts
             size_in_b = mixture_model_sizes[model_name]
 
-            for top_size in mixture_costs.keys():
+            for top_size in mixture_costs:
                 if size_in_b <= top_size:
                     cost_per_mil = mixture_costs[top_size]
                     break

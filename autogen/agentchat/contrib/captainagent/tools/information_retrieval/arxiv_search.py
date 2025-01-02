@@ -8,15 +8,16 @@ from autogen.coding.func_with_reqs import with_requirements
 
 @with_requirements(["arxiv"], ["arxiv"])
 def arxiv_search(query, max_results=10, sortby="relevance"):
-    """
-    Search for articles on arXiv based on the given query.
+    """Search for articles on arXiv based on the given query.
 
     Args:
+    ----
         query (str): The search query.
         max_results (int, optional): The maximum number of results to retrieve. Defaults to 10.
         sortby (str, optional): The sorting criterion for the search results. Can be 'relevance' or 'submittedDate'. Defaults to 'relevance'.
 
     Returns:
+    -------
         list: A list of dictionaries containing information about the search results. Each dictionary contains the following keys:
             - 'title': The title of the article.
             - 'authors': The authors of the article.
@@ -24,6 +25,7 @@ def arxiv_search(query, max_results=10, sortby="relevance"):
             - 'entry_id': The entry ID of the article.
             - 'doi': The DOI of the article (If applicable).
             - 'published': The publication date of the article in the format 'Y-M'.
+
     """
 
     def get_author(r):

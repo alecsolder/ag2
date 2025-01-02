@@ -18,9 +18,7 @@ from .graph_query_engine import GraphStoreQueryResult
 
 
 class FalkorGraphQueryEngine:
-    """
-    This is a wrapper for FalkorDB KnowledgeGraph.
-    """
+    """This is a wrapper for FalkorDB KnowledgeGraph."""
 
     def __init__(
         self,
@@ -32,13 +30,13 @@ class FalkorGraphQueryEngine:
         model: GenerativeModel = OpenAiGenerativeModel("gpt-4o"),
         ontology: Ontology | None = None,
     ):
-        """
-        Initialize a FalkorDB knowledge graph.
+        """Initialize a FalkorDB knowledge graph.
         Please also refer to https://github.com/FalkorDB/GraphRAG-SDK/blob/main/graphrag_sdk/kg.py
 
         TODO: Fix LLM API cost calculation for FalkorDB useages.
 
         Args:
+        ----
             name (str): Knowledge graph name.
             host (str): FalkorDB hostname.
             port (int): FalkorDB port number.
@@ -47,6 +45,7 @@ class FalkorGraphQueryEngine:
             model (GenerativeModel): LLM model to use for FalkorDB to build and retrieve from the graph, default to use OAI gpt-4o.
             ontology: FalkorDB knowledge graph schema/ontology, https://github.com/FalkorDB/GraphRAG-SDK/blob/main/graphrag_sdk/ontology.py
                 If None, FalkorDB will auto generate an ontology from the input docs.
+
         """
         self.name = name
         self.ontology_table_name = name + "_ontology"
@@ -61,9 +60,7 @@ class FalkorGraphQueryEngine:
         self.falkordb = FalkorDB(host=self.host, port=self.port, username=self.username, password=self.password)
 
     def connect_db(self):
-        """
-        Connect to an existing knowledge graph.
-        """
+        """Connect to an existing knowledge graph."""
         if self.name in self.falkordb.list_graphs():
             try:
                 self.ontology = self._load_ontology_from_db()
@@ -89,9 +86,7 @@ class FalkorGraphQueryEngine:
             raise ValueError(f"Knowledge graph '{self.name}' does not exist")
 
     def init_db(self, input_doc: list[Document]):
-        """
-        Build the knowledge graph with input documents.
-        """
+        """Build the knowledge graph with input documents."""
         sources = []
         for doc in input_doc:
             if os.path.exists(doc.path_or_url):
@@ -128,16 +123,17 @@ class FalkorGraphQueryEngine:
         raise NotImplementedError("This method is not supported by FalkorDB SDK yet.")
 
     def query(self, question: str, n_results: int = 1, **kwargs) -> GraphStoreQueryResult:
-        """
-        Query the knowledge graph with a question and optional message history.
+        """Query the knowledge graph with a question and optional message history.
 
         Args:
+        ----
         question: a human input question.
         n_results: number of returned results.
         kwargs:
             messages: a list of message history.
 
         Returns: FalkorGraphQueryResult
+
         """
         if self.knowledge_graph is None:
             raise ValueError("Knowledge graph has not been selected or created.")
@@ -150,9 +146,7 @@ class FalkorGraphQueryEngine:
         return GraphStoreQueryResult(answer=response["response"], results=[])
 
     def delete(self) -> bool:
-        """
-        Delete graph and its data from database.
-        """
+        """Delete graph and its data from database."""
         all_graphs = self.falkordb.list_graphs()
         if self.name in all_graphs:
             self.falkordb.select_graph(self.name).delete()
@@ -164,9 +158,7 @@ class FalkorGraphQueryEngine:
         return self.falkordb.select_graph(self.ontology_table_name)
 
     def _save_ontology_to_db(self, ontology: Ontology):
-        """
-        Save graph ontology to a separate table with {graph_name}_ontology
-        """
+        """Save graph ontology to a separate table with {graph_name}_ontology"""
         if self.ontology_table_name in self.falkordb.list_graphs():
             raise ValueError(f"Knowledge graph {self.name} is already created.")
         graph = self.__get_ontology_storage_graph()

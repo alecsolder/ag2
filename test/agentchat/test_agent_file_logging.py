@@ -16,8 +16,8 @@ import pytest
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
 
-from conftest import skip_openai  # noqa: E402
-from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST  # noqa: E402
+from conftest import skip_openai
+from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
 
 import autogen
 import autogen.runtime_logging
@@ -31,7 +31,7 @@ def dummy_function(param1: str, param2: int) -> Any:
 
 
 @pytest.mark.skipif(is_windows, reason="Skipping file logging tests on Windows")
-@pytest.fixture
+@pytest.fixture()
 def logger() -> FileLogger:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     with tempfile.TemporaryDirectory(dir=current_dir) as temp_dir:

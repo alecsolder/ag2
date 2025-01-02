@@ -18,7 +18,7 @@ from autogen import AssistantAgent, GroupChat, GroupChatManager, UserProxyAgent,
 from autogen.agentchat.chat import _post_process_carryover_item
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from conftest import reason, skip_openai  # noqa: E402
+from conftest import reason, skip_openai
 
 config_list = (
     []

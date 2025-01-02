@@ -48,9 +48,11 @@ def register_interoperable_class(short_name: str) -> Callable[[InteroperableClas
     """Register an Interoperable class in the global registry.
 
     Returns:
+    -------
         Callable[[InteroperableClass], InteroperableClass]: Decorator function
 
     Example:
+    -------
         ```python
         @register_interoperable_class("myinterop")
         class MyInteroperability(Interoperable):
@@ -58,6 +60,7 @@ def register_interoperable_class(short_name: str) -> Callable[[InteroperableClas
                 # implementation
                 ...
         ```
+
     """
 
     def inner(cls: InteroperableClass) -> InteroperableClass:

@@ -2,16 +2,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 def perform_web_search(query, count=10, offset=0):
-    """
-    Perform a web search using Bing API.
+    """Perform a web search using Bing API.
 
     Args:
+    ----
         query (str): The search query.
         count (int, optional): Number of search results to retrieve. Defaults to 10.
         offset (int, optional): Offset of the first search result. Defaults to 0.
 
     Returns:
+    -------
         The name, URL and snippet of each search result.
+
     """
     import os
 

@@ -139,7 +139,7 @@ class TestConsoleIOWithWebsockets:
                         f" - on_connect(): Initiating chat with agent {agent} using message '{initial_msg}'",
                         flush=True,
                     )
-                    user_proxy.initiate_chat(  # noqa: F704
+                    user_proxy.initiate_chat(
                         agent,
                         message=initial_msg,
                         cache=cache,

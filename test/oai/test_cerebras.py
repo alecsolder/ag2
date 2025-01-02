@@ -19,7 +19,7 @@ except ImportError:
 
 
 # Fixtures for mock data
-@pytest.fixture
+@pytest.fixture()
 def mock_response():
     class MockResponse:
         def __init__(self, text, choices, usage, cost, model):
@@ -32,7 +32,7 @@ def mock_response():
     return MockResponse
 
 
-@pytest.fixture
+@pytest.fixture()
 def cerebras_client():
     return CerebrasClient(api_key="fake_api_key")
 
@@ -43,7 +43,6 @@ skip_reason = "Cerebras dependency is not installed"
 # Test initialization and configuration
 @pytest.mark.skipif(skip, reason=skip_reason)
 def test_initialization():
-
     # Missing any api_key
     with pytest.raises(AssertionError) as assertinfo:
         CerebrasClient()  # Should raise an AssertionError due to missing api_key

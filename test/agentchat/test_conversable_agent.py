@@ -27,7 +27,7 @@ from autogen.exception_utils import InvalidCarryOverType, SenderRequired
 from autogen.tools.tool import Tool
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from conftest import MOCK_OPEN_AI_API_KEY, reason, skip_openai  # noqa: E402
+from conftest import MOCK_OPEN_AI_API_KEY, reason, skip_openai
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -37,7 +37,7 @@ gpt4_config_list = [
 ]
 
 
-@pytest.fixture
+@pytest.fixture()
 def conversable_agent():
     return ConversableAgent(
         "conversable_agent_0",
@@ -86,7 +86,7 @@ def test_sync_trigger():
     pytest.raises(ValueError, agent._match_trigger, 1, agent1)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_trigger():
     agent = ConversableAgent("a0", max_consecutive_auto_reply=0, llm_config=False, human_input_mode="NEVER")
     agent1 = ConversableAgent("a1", max_consecutive_auto_reply=0, llm_config=False, human_input_mode="NEVER")
@@ -180,7 +180,7 @@ def test_async_trigger_in_sync_chat():
     reply_mock.assert_not_called()
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_sync_trigger_in_async_chat():
     agent = ConversableAgent("a0", max_consecutive_auto_reply=0, llm_config=False, human_input_mode="NEVER")
     agent1 = ConversableAgent("a1", max_consecutive_auto_reply=0, llm_config=False, human_input_mode="NEVER")
@@ -481,7 +481,7 @@ def test_generate_reply_raises_on_messages_and_sender_none(conversable_agent):
         conversable_agent.generate_reply(messages=None, sender=None)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_a_generate_reply_raises_on_messages_and_sender_none(conversable_agent):
     with pytest.raises(AssertionError):
         await conversable_agent.a_generate_reply(messages=None, sender=None)
@@ -498,7 +498,7 @@ def test_generate_reply_with_messages_and_sender_none(conversable_agent):
         pytest.fail(f"Unexpected exception: {e}")
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_a_generate_reply_with_messages_and_sender_none(conversable_agent):
     messages = [{"role": "user", "content": "hello"}]
     try:
@@ -622,7 +622,7 @@ def test__wrap_function_sync():
     assert not inspect.iscoroutinefunction(currency_calculator)
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test__wrap_function_async():
     CurrencySymbol = Literal["USD", "EUR"]
 
@@ -992,7 +992,7 @@ def test_function_registration_e2e_sync() -> None:
     # 'await' is used to pause and resume code execution for async IO operations.
     # Without 'await', an async function returns a coroutine object but doesn't execute the function.
     # With 'await', the async function is executed and the current function is paused until the awaited function returns a result.
-    user_proxy.initiate_chat(  # noqa: F704
+    user_proxy.initiate_chat(
         coder,
         message="Create a timer for 1 second and then a stopwatch for 2 seconds.",
     )
@@ -1070,7 +1070,7 @@ async def test_function_registration_e2e_async() -> None:
     # 'await' is used to pause and resume code execution for async IO operations.
     # Without 'await', an async function returns a coroutine object but doesn't execute the function.
     # With 'await', the async function is executed and the current function is paused until the awaited function returns a result.
-    await user_proxy.a_initiate_chat(  # noqa: F704
+    await user_proxy.a_initiate_chat(
         coder,
         message="Create a timer for 1 second and then a stopwatch for 2 seconds.",
     )
@@ -1392,7 +1392,6 @@ def test_chat_history():
 
 
 def test_http_client():
-
     import httpx
 
     with pytest.raises(TypeError):
@@ -1413,7 +1412,6 @@ def test_http_client():
 
 
 def test_adding_duplicate_function_warning():
-
     config_base = [{"base_url": "http://0.0.0.0:8000", "api_key": "NULL"}]
 
     agent = autogen.ConversableAgent(

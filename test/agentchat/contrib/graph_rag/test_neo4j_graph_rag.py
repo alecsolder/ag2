@@ -8,7 +8,7 @@ import sys
 from typing import Literal
 
 import pytest
-from conftest import reason, skip_openai  # noqa: E402
+from conftest import reason, skip_openai
 
 try:
     from autogen.agentchat.contrib.graph_rag.document import Document, DocumentType
@@ -81,9 +81,7 @@ def neo4j_query_engine():
 # Test fixture to test auto-generation without given schema
 @pytest.fixture(scope="module")
 def neo4j_query_engine_auto():
-    """
-    Test the engine with auto-generated property graph
-    """
+    """Test the engine with auto-generated property graph"""
     query_engine = Neo4jGraphQueryEngine(
         username="neo4j",
         password="password",
@@ -100,9 +98,7 @@ def neo4j_query_engine_auto():
     reason=reason,
 )
 def test_neo4j_query_engine(neo4j_query_engine):
-    """
-    Test querying functionality of the Neo4j Query Engine.
-    """
+    """Test querying functionality of the Neo4j Query Engine."""
     question = "Which company is the employer?"
 
     # Query the database
@@ -118,9 +114,7 @@ def test_neo4j_query_engine(neo4j_query_engine):
     reason=reason,
 )
 def test_neo4j_add_records(neo4j_query_engine):
-    """
-    Test the add_records functionality of the Neo4j Query Engine.
-    """
+    """Test the add_records functionality of the Neo4j Query Engine."""
     input_path = "./test/agentchat/contrib/graph_rag/the_matrix.txt"
     input_documents = [Document(doctype=DocumentType.TEXT, path_or_url=input_path)]
 
@@ -141,9 +135,7 @@ def test_neo4j_add_records(neo4j_query_engine):
     reason=reason,
 )
 def test_neo4j_auto(neo4j_query_engine_auto):
-    """
-    Test querying with auto-generated property graph
-    """
+    """Test querying with auto-generated property graph"""
     question = "Which company is the employer?"
     query_result: GraphStoreQueryResult = neo4j_query_engine_auto.query(question=question)
 

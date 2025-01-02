@@ -20,10 +20,10 @@ from autogen.agentchat.contrib.gpt_assistant_agent import GPTAssistantAgent
 from autogen.oai.openai_utils import detect_gpt_assistant_api_version, retrieve_assistants_by_name
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-from conftest import reason, skip_openai  # noqa: E402
+from conftest import reason, skip_openai
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST  # noqa: E402
+from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
 
 if not skip_openai:
     openai_config_list = autogen.config_list_from_json(
@@ -143,8 +143,7 @@ def test_get_assistant_instructions() -> None:
 
 
 def _test_get_assistant_instructions(gpt_config) -> None:
-    """
-    Test function to create a new GPTAssistantAgent, set its instructions, retrieve the instructions,
+    """Test function to create a new GPTAssistantAgent, set its instructions, retrieve the instructions,
     and assert that the retrieved instructions match the set instructions.
     """
     name = f"For test_get_assistant_instructions {uuid.uuid4()}"
@@ -172,8 +171,7 @@ def test_gpt_assistant_instructions_overwrite() -> None:
 
 
 def _test_gpt_assistant_instructions_overwrite(gpt_config) -> None:
-    """
-    Test that the instructions of a GPTAssistantAgent can be overwritten or not depending on the value of the
+    """Test that the instructions of a GPTAssistantAgent can be overwritten or not depending on the value of the
     `overwrite_instructions` parameter when creating a new assistant with the same ID.
 
     Steps:
@@ -182,7 +180,6 @@ def _test_gpt_assistant_instructions_overwrite(gpt_config) -> None:
     3. Create a new GPTAssistantAgent with the same ID but different instructions and `overwrite_instructions=True`.
     4. Check that the instructions of the assistant have been overwritten with the new ones.
     """
-
     name = f"For test_gpt_assistant_instructions_overwrite {uuid.uuid4()}"
     instructions1 = "This is a test #1"
     instructions2 = "This is a test #2"
@@ -221,8 +218,7 @@ def _test_gpt_assistant_instructions_overwrite(gpt_config) -> None:
     reason=reason,
 )
 def test_gpt_assistant_existing_no_instructions() -> None:
-    """
-    Test function to check if the GPTAssistantAgent can retrieve instructions for an existing assistant
+    """Test function to check if the GPTAssistantAgent can retrieve instructions for an existing assistant
     even if the assistant was created with no instructions initially.
     """
     name = f"For test_gpt_assistant_existing_no_instructions {uuid.uuid4()}"
@@ -261,8 +257,7 @@ def test_gpt_assistant_existing_no_instructions() -> None:
     reason=reason,
 )
 def test_get_assistant_files() -> None:
-    """
-    Test function to create a new GPTAssistantAgent, set its instructions, retrieve the instructions,
+    """Test function to create a new GPTAssistantAgent, set its instructions, retrieve the instructions,
     and assert that the retrieved instructions match the set instructions.
     """
     current_file_path = os.path.abspath(__file__)
@@ -306,10 +301,7 @@ def test_get_assistant_files() -> None:
     reason=reason,
 )
 def test_assistant_retrieval() -> None:
-    """
-    Test function to check if the GPTAssistantAgent can retrieve the same assistant
-    """
-
+    """Test function to check if the GPTAssistantAgent can retrieve the same assistant"""
     name = f"For test_assistant_retrieval {uuid.uuid4()}"
 
     function_1_schema = {
@@ -384,7 +376,6 @@ def test_assistant_retrieval() -> None:
 )
 def test_assistant_mismatch_retrieval() -> None:
     """Test function to check if the GPTAssistantAgent can filter out the mismatch assistant"""
-
     name = f"For test_assistant_retrieval {uuid.uuid4()}"
 
     function_1_schema = {
@@ -483,8 +474,7 @@ def test_assistant_mismatch_retrieval() -> None:
     reason=reason,
 )
 def test_gpt_assistant_tools_overwrite() -> None:
-    """
-    Test that the tools of a GPTAssistantAgent can be overwritten or not depending on the value of the
+    """Test that the tools of a GPTAssistantAgent can be overwritten or not depending on the value of the
     `overwrite_tools` parameter when creating a new assistant with the same ID.
 
     Steps:
@@ -493,7 +483,6 @@ def test_gpt_assistant_tools_overwrite() -> None:
     3. Create a new GPTAssistantAgent with the same ID but different tools and `overwrite_tools=True`.
     4. Check that the tools of the assistant have been overwritten with the new ones.
     """
-
     original_tools = [
         {
             "type": "function",
@@ -636,8 +625,7 @@ def test_gpt_reflection_with_llm() -> None:
     reason=reason,
 )
 def test_assistant_tool_and_function_role_messages() -> None:
-    """
-    Tests that internally generated roles ('tool', 'function') are correctly mapped to
+    """Tests that internally generated roles ('tool', 'function') are correctly mapped to
     OpenAI Assistant API-compatible role ('assistant') before sending to the OpenAI API
     to prevent BadRequestError when using GPTAssistantAgent with other tool-calling agents.
 

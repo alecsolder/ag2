@@ -25,7 +25,9 @@ class RealtimeObserver(ABC):
         """Observer for the OpenAI Realtime API.
 
         Args:
+        ----
             logger (Logger): The logger for the observer.
+
         """
         self._ready_event = Event()
         self._agent: Optional["RealtimeAgent"] = None
@@ -56,7 +58,9 @@ class RealtimeObserver(ABC):
         When implementing, be sure to call `self._ready_event.set()` when the observer is ready to process events.
 
         Args:
+        ----
             agent (RealtimeAgent): The realtime agent attached to the observer.
+
         """
         self._agent = agent
         await self.initialize_session()
@@ -88,6 +92,8 @@ class RealtimeObserver(ABC):
         """Handle an event from the OpenAI Realtime API.
 
         Args:
+        ----
             event (RealtimeServerEvent): The event from the OpenAI Realtime API.
+
         """
         ...

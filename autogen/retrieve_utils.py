@@ -166,7 +166,6 @@ def split_files_to_chunks(
     custom_text_split_function: Callable = None,
 ) -> tuple[list[str], list[dict]]:
     """Split a list of files into chunks of max_tokens."""
-
     chunks = []
     sources = []
 
@@ -359,6 +358,7 @@ def create_vector_db_from_dir(
         you prepared your own vector db.
 
     Args:
+    ----
         dir_path (Union[str, List[str]]): the path to the directory, file, url or a list of them.
         max_tokens (Optional, int): the maximum number of tokens per chunk. Default is 4000.
         client (Optional, API): the chromadb client. Default is None.
@@ -380,8 +380,9 @@ def create_vector_db_from_dir(
         extra_docs (Optional, bool): whether to add more documents in the collection. Default is False
 
     Returns:
-
+    -------
     The chromadb client.
+
     """
     if client is None:
         client = chromadb.PersistentClient(path=db_path)
@@ -445,6 +446,7 @@ def query_vector_db(
         and query function.
 
     Args:
+    ----
         query_texts (List[str]): the list of strings which will be used to query the vector db.
         n_results (Optional, int): the number of results to return. Default is 10.
         client (Optional, API): the chromadb compatible client. Default is None, a chromadb client will be used.
@@ -458,7 +460,7 @@ def query_vector_db(
             functions, you can pass it here, follow the examples in `https://docs.trychroma.com/embeddings`.
 
     Returns:
-
+    -------
         The query result. The format is:
 
     ```python
@@ -469,6 +471,7 @@ def query_vector_db(
         metadatas: Optional[List[List[Metadata]]]
         distances: Optional[List[List[float]]]
     ```
+
     """
     if client is None:
         client = chromadb.PersistentClient(path=db_path)

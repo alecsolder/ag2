@@ -23,10 +23,13 @@ if not PYDANTIC_V1:
         """Convert a type to a JSON schema
 
         Args:
+        ----
             t (Type): The type to convert
 
         Returns:
+        -------
             JsonSchemaValue: The JSON schema
+
         """
         return TypeAdapter(t).json_schema()
 
@@ -34,9 +37,11 @@ if not PYDANTIC_V1:
         """Convert a pydantic model to a dict
 
         Args:
+        ----
             model (BaseModel): The model to convert
 
         Returns:
+        -------
             Dict[str, Any]: The dict representation of the model
 
         """
@@ -46,10 +51,13 @@ if not PYDANTIC_V1:
         """Convert a pydantic model to a JSON string
 
         Args:
+        ----
             model (BaseModel): The model to convert
 
         Returns:
+        -------
             str: The JSON string representation of the model
+
         """
         return model.model_dump_json()
 
@@ -65,12 +73,14 @@ else:  # pragma: no cover
         """Convert a type to a JSON schema
 
         Args:
+        ----
             t (Type): The type to convert
 
         Returns:
+        -------
             JsonSchemaValue: The JSON schema
-        """
 
+        """
         if t is None:
             return {"type": "null"}
         elif get_origin(t) is Union:
@@ -97,9 +107,11 @@ else:  # pragma: no cover
         """Convert a pydantic model to a dict
 
         Args:
+        ----
             model (BaseModel): The model to convert
 
         Returns:
+        -------
             Dict[str, Any]: The dict representation of the model
 
         """
@@ -109,9 +121,12 @@ else:  # pragma: no cover
         """Convert a pydantic model to a JSON string
 
         Args:
+        ----
             model (BaseModel): The model to convert
 
         Returns:
+        -------
             str: The JSON string representation of the model
+
         """
         return model.json()

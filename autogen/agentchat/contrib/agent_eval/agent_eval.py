@@ -21,16 +21,20 @@ def generate_criteria(
     max_round=2,
     use_subcritic: bool = False,
 ):
-    """
-    Creates a list of criteria for evaluating the utility of a given task.
+    """Creates a list of criteria for evaluating the utility of a given task.
+
     Args:
+    ----
         llm_config (dict or bool): llm inference configuration.
         task (Task): The task to evaluate.
         additional_instructions (str): Additional instructions for the criteria agent.
         max_round (int): The maximum number of rounds to run the conversation.
         use_subcritic (bool): Whether to use the subcritic agent to generate subcriteria.
+
     Returns:
+    -------
         list: A list of Criterion objects for evaluating the utility of the given task.
+
     """
     critic = CriticAgent(
         system_message=CriticAgent.DEFAULT_SYSTEM_MESSAGE + "\n" + additional_instructions,
@@ -73,16 +77,20 @@ def quantify_criteria(
     test_case: str = "",
     ground_truth: str = "",
 ):
-    """
-    Quantifies the performance of a system using the provided criteria.
+    """Quantifies the performance of a system using the provided criteria.
+
     Args:
+    ----
         llm_config (dict or bool): llm inference configuration.
         criteria ([Criterion]): A list of criteria for evaluating the utility of a given task.
         task (Task): The task to evaluate.
         test_case (str): The test case to evaluate.
         ground_truth (str): The ground truth for the test case.
+
     Returns:
+    -------
         dict: A dictionary where the keys are the criteria and the values are the assessed performance based on accepted values for each criteria.
+
     """
     quantifier = QuantifierAgent(
         llm_config=llm_config,
@@ -95,7 +103,7 @@ def quantify_criteria(
         code_execution_config={"use_docker": False},
     )
 
-    quantifier_user.initiate_chat(  # noqa: F841
+    quantifier_user.initiate_chat(
         quantifier,
         message=task.get_sys_message()
         + "Evaluation dictionary: "

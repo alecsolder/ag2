@@ -2,16 +2,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 def scrape_wikipedia_tables(url: str, header_keyword: str):
-    """
-    Scrapes Wikipedia tables based on a given URL and header keyword.
+    """Scrapes Wikipedia tables based on a given URL and header keyword.
 
     Args:
+    ----
         url: The URL of the Wikipedia page to scrape.
         header_keyword: The keyword to search for in the headers of the page.
 
     Returns:
+    -------
         list: A list of lists representing the scraped table data. Each inner list represents a row in the table,
               with each element representing a cell value.
+
     """
     import requests
     from bs4 import BeautifulSoup

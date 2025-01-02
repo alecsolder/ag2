@@ -147,10 +147,12 @@ class Completion(openai_Completion):
         """Set cache path.
 
         Args:
+        ----
             seed (int, Optional): The integer identifier for the pseudo seed.
                 Results corresponding to different seeds will be cached in different places.
             cache_path (str, Optional): The root path for the cache.
                 The complete cache path will be {cache_path_root}/{seed}.
+
         """
         cls.cache_seed = seed
         cls.cache_path = f"{cache_path_root}/{seed}"
@@ -160,10 +162,12 @@ class Completion(openai_Completion):
         """Clear cache.
 
         Args:
+        ----
             seed (int, Optional): The integer identifier for the pseudo seed.
                 If omitted, all caches under cache_path_root will be cleared.
             cache_path (str, Optional): The root path for the cache.
                 The complete cache path will be {cache_path_root}/{seed}.
+
         """
         if seed is None:
             shutil.rmtree(cache_path_root, ignore_errors=True)
@@ -356,6 +360,7 @@ class Completion(openai_Completion):
         """Evaluate the given config as the hyperparameter setting for the openai api call.
 
         Args:
+        ----
             config (dict): Hyperparameter setting for the openai api call.
             prune (bool, optional): Whether to enable pruning. Defaults to True.
             eval_only (bool, optional): Whether to evaluate only
@@ -363,7 +368,9 @@ class Completion(openai_Completion):
               Defaults to False.
 
         Returns:
+        -------
             dict: Evaluation results.
+
         """
         cost = 0
         data = cls.data
@@ -543,6 +550,7 @@ class Completion(openai_Completion):
         TODO: support agg_method as in test
 
         Args:
+        ----
             data (list): The list of data points.
             metric (str): The metric to optimize.
             mode (str): The optimization mode, "min" or "max.
@@ -586,8 +594,10 @@ class Completion(openai_Completion):
                 Each message should be a dict with keys "role" and "content". The value of "content" can be a string/Callable template.
 
         Returns:
+        -------
             dict: The optimized hyperparameter setting.
             tune.ExperimentAnalysis: The tuning results.
+
         """
         logger.warning(
             "tuning via Completion.tune is deprecated in autogen, pyautogen v0.2 and openai>=1. "
@@ -737,6 +747,7 @@ class Completion(openai_Completion):
         """Make a completion for a given context.
 
         Args:
+        ----
             context (Dict, Optional): The context to instantiate the prompt.
                 It needs to contain keys that are used by the prompt template or the filter function.
                 E.g., `prompt="Complete the following sentence: {prefix}, context={"prefix": "Today I feel"}`.
@@ -795,11 +806,13 @@ class Completion(openai_Completion):
                 - `cache_seed` (int) for the cache. This is useful when implementing "controlled randomness" for the completion.
 
         Returns:
+        -------
             Responses from OpenAI API, with additional fields.
                 - `cost`: the total cost.
             When `config_list` is provided, the response will contain a few more fields:
                 - `config_id`: the index of the config in the config_list that is used to generate the response.
                 - `pass_filter`: whether the response passes the filter function. None if no filter is provided.
+
         """
         logger.warning(
             "Completion.create is deprecated in autogen, pyautogen v0.2 and openai>=1. "
@@ -924,6 +937,7 @@ class Completion(openai_Completion):
         """Evaluate the responses created with the config for the OpenAI API call.
 
         Args:
+        ----
             data (list): The list of test data points.
             eval_func (Callable): The evaluation function for responses per data instance.
                 The function should take a list of responses and a data point as input,
@@ -973,9 +987,11 @@ class Completion(openai_Completion):
             **config (dict): parameters passed to the openai api call `create()`.
 
         Returns:
+        -------
             None when no valid eval_func is provided in either test or tune;
             Otherwise, a dict of aggregated results, responses and per instance results if `return_responses_and_per_instance_result` is True;
             Otherwise, a dict of aggregated results (responses and per instance results are not returned).
+
         """
         result_agg, responses_list, result_list = {}, [], []
         metric_keys = None
@@ -1051,10 +1067,13 @@ class Completion(openai_Completion):
         """Compute the cost of an API call.
 
         Args:
+        ----
             response (dict): The response from OpenAI API.
 
         Returns:
+        -------
             The cost in USD. 0 if the model is not supported.
+
         """
         model = response.get("model")
         if model not in cls.price1K:
@@ -1073,10 +1092,13 @@ class Completion(openai_Completion):
         """Extract the text from a completion or chat response.
 
         Args:
+        ----
             response (dict): The response from OpenAI API.
 
         Returns:
+        -------
             A list of text in the responses.
+
         """
         choices = response["choices"]
         if "text" in choices[0]:
@@ -1088,10 +1110,13 @@ class Completion(openai_Completion):
         """Extract the text or function calls from a completion or chat response.
 
         Args:
+        ----
             response (dict): The response from OpenAI API.
 
         Returns:
+        -------
             A list of text or function calls in the responses.
+
         """
         choices = response["choices"]
         if "text" in choices[0]:
@@ -1152,6 +1177,7 @@ class Completion(openai_Completion):
         """Start book keeping.
 
         Args:
+        ----
             history_dict (Dict): A dictionary for book keeping.
                 If no provided, a new one will be created.
             compact (bool): Whether to keep the history dictionary compact.
@@ -1191,6 +1217,7 @@ class Completion(openai_Completion):
                 For a conversation with many turns, the non-compact history dictionary has a quadratic size
                 while the compact history dict has a linear size.
             reset_counter (bool): whether to reset the counter of the number of API calls.
+
         """
         logger.warning(
             "logging via Completion.start_logging is deprecated in autogen and pyautogen v0.2. "

@@ -6,7 +6,6 @@
 # SPDX-License-Identifier: MIT
 import os
 import platform
-import sys
 
 import setuptools
 
@@ -40,6 +39,12 @@ install_requires = [
     "packaging",
     "websockets>=14,<15",
     "asyncer>=0.0.8",
+]
+
+lint = [
+    "ruff==0.7.4",
+    "codespell==2.3.0",
+    "pre-commit==4.0.1",
 ]
 
 test = [
@@ -109,6 +114,7 @@ autobuild = ["chromadb", "sentence-transformers", "huggingface-hub", "pysqlite3-
 
 extra_require = {
     "test": test,
+    "lint": lint,
     "blendsearch": ["flaml[blendsearch]"],
     "mathchat": ["sympy", "pydantic==1.10.9", "wolframalpha"],
     "retrievechat": retrieve_chat,

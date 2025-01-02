@@ -2,17 +2,19 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 def find_continuity_point(f_leq, f_gt, x_value):
-    """
-    Find the value 'a' that ensures the continuity of a piecewise function at a given point.
+    """Find the value 'a' that ensures the continuity of a piecewise function at a given point.
 
     Args:
+    ----
         f_leq (str): The function expression for f(x) when x is less than or equal to the continuity point, in the form of a string.
         f_gt (str): The function expression for f(x) when x is greater than the continuity point, in the form of a string.
         x_value (float): The x-value at which continuity is to be ensured.
 
     Returns:
+    -------
         float or None: The value of 'a' that satisfies the continuity condition,
         or None if no such value exists.
+
     """
     from sympy import Eq, solve, symbols, sympify
 

@@ -30,7 +30,7 @@ else:
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-from conftest import MOCK_OPEN_AI_API_KEY, skip_openai  # noqa: E402
+from conftest import MOCK_OPEN_AI_API_KEY, skip_openai
 
 filter_dict = {"model": ["gpt-4o-mini"]}
 
@@ -65,7 +65,7 @@ def api_key():
     return MOCK_OPEN_AI_API_KEY if skip_openai else os.environ.get("OPENAI_API_KEY")
 
 
-@pytest.fixture
+@pytest.fixture()
 def dalle_config() -> dict[str, Any]:
     config_list = openai_utils.config_list_from_models(model_list=["dall-e-3"], exclude="aoai")
     if not config_list:
@@ -73,7 +73,7 @@ def dalle_config() -> dict[str, Any]:
     return {"config_list": config_list, "timeout": 120, "cache_seed": None}
 
 
-@pytest.fixture
+@pytest.fixture()
 def gpt4_config() -> dict[str, Any]:
     config_list = [
         {
@@ -88,7 +88,7 @@ def gpt4_config() -> dict[str, Any]:
     return {"config_list": config_list, "timeout": 120, "cache_seed": None}
 
 
-@pytest.fixture
+@pytest.fixture()
 def image_gen_capability():
     image_generator = _TestImageGenerator(Image.new("RGB", (256, 256)))
     return generate_images.ImageGeneration(image_generator)
@@ -114,11 +114,12 @@ def test_dalle_image_generator_cache_key(
     """Tests if DalleImageGenerator creates unique cache keys.
 
     Args:
+    ----
         dalle_config: The LLM config for the DalleImageGenerator.
         gen_config_1: A tuple containing the resolution, quality, and prompt for the first image generator.
         gen_config_2: A tuple containing the resolution, quality, and prompt for the second image generator.
-    """
 
+    """
     dalle_generator_1 = dalle_image_generator(dalle_config, resolution=gen_config_1[0], quality=gen_config_1[1])
     dalle_generator_2 = dalle_image_generator(dalle_config, resolution=gen_config_2[0], quality=gen_config_2[1])
 

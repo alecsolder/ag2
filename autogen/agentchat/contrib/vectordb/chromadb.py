@@ -26,17 +26,15 @@ logger = get_logger(__name__)
 
 
 class ChromaVectorDB(VectorDB):
-    """
-    A vector database that uses ChromaDB as the backend.
-    """
+    """A vector database that uses ChromaDB as the backend."""
 
     def __init__(
         self, *, client=None, path: str = "tmp/db", embedding_function: Callable = None, metadata: dict = None, **kwargs
     ) -> None:
-        """
-        Initialize the vector database.
+        """Initialize the vector database.
 
         Args:
+        ----
             client: chromadb.Client | The client object of the vector database. Default is None.
                 If provided, it will use the client object directly and ignore other arguments.
             path: str | The path to the vector database. Default is `tmp/db`. The default was `None` for version `<=0.2.24`.
@@ -50,7 +48,9 @@ class ChromaVectorDB(VectorDB):
             kwargs: dict | Additional keyword arguments.
 
         Returns:
+        -------
             None
+
         """
         self.client = client
         self.path = path
@@ -71,20 +71,22 @@ class ChromaVectorDB(VectorDB):
     def create_collection(
         self, collection_name: str, overwrite: bool = False, get_or_create: bool = True
     ) -> Collection:
-        """
-        Create a collection in the vector database.
+        """Create a collection in the vector database.
         Case 1. if the collection does not exist, create the collection.
         Case 2. the collection exists, if overwrite is True, it will overwrite the collection.
         Case 3. the collection exists and overwrite is False, if get_or_create is True, it will get the collection,
             otherwise it raise a ValueError.
 
         Args:
+        ----
             collection_name: str | The name of the collection.
             overwrite: bool | Whether to overwrite the collection if it exists. Default is False.
             get_or_create: bool | Whether to get the collection if it exists. Default is True.
 
         Returns:
+        -------
             Collection | The collection object.
+
         """
         try:
             if self.active_collection and self.active_collection.name == collection_name:
@@ -114,15 +116,17 @@ class ChromaVectorDB(VectorDB):
             raise ValueError(f"Collection {collection_name} already exists.")
 
     def get_collection(self, collection_name: str = None) -> Collection:
-        """
-        Get the collection from the vector database.
+        """Get the collection from the vector database.
 
         Args:
+        ----
             collection_name: str | The name of the collection. Default is None. If None, return the
                 current active collection.
 
         Returns:
+        -------
             Collection | The collection object.
+
         """
         if collection_name is None:
             if self.active_collection is None:
@@ -139,14 +143,16 @@ class ChromaVectorDB(VectorDB):
         return self.active_collection
 
     def delete_collection(self, collection_name: str) -> None:
-        """
-        Delete the collection from the vector database.
+        """Delete the collection from the vector database.
 
         Args:
+        ----
             collection_name: str | The name of the collection.
 
         Returns:
+        -------
             None
+
         """
         self.client.delete_collection(collection_name)
         if self.active_collection and self.active_collection.name == collection_name:
@@ -170,17 +176,19 @@ class ChromaVectorDB(VectorDB):
                 collection.add(**collection_kwargs)
 
     def insert_docs(self, docs: list[Document], collection_name: str = None, upsert: bool = False) -> None:
-        """
-        Insert documents into the collection of the vector database.
+        """Insert documents into the collection of the vector database.
 
         Args:
+        ----
             docs: List[Document] | A list of documents. Each document is a TypedDict `Document`.
             collection_name: str | The name of the collection. Default is None.
             upsert: bool | Whether to update the document if it exists. Default is False.
             kwargs: Dict | Additional keyword arguments.
 
         Returns:
+        -------
             None
+
         """
         if not docs:
             return
@@ -205,29 +213,33 @@ class ChromaVectorDB(VectorDB):
         self._batch_insert(collection, embeddings, ids, metadatas, documents, upsert)
 
     def update_docs(self, docs: list[Document], collection_name: str = None) -> None:
-        """
-        Update documents in the collection of the vector database.
+        """Update documents in the collection of the vector database.
 
         Args:
+        ----
             docs: List[Document] | A list of documents.
             collection_name: str | The name of the collection. Default is None.
 
         Returns:
+        -------
             None
+
         """
         self.insert_docs(docs, collection_name, upsert=True)
 
     def delete_docs(self, ids: list[ItemID], collection_name: str = None, **kwargs) -> None:
-        """
-        Delete documents from the collection of the vector database.
+        """Delete documents from the collection of the vector database.
 
         Args:
+        ----
             ids: List[ItemID] | A list of document ids. Each id is a typed `ItemID`.
             collection_name: str | The name of the collection. Default is None.
             kwargs: Dict | Additional keyword arguments.
 
         Returns:
+        -------
             None
+
         """
         collection = self.get_collection(collection_name)
         collection.delete(ids, **kwargs)
@@ -240,10 +252,10 @@ class ChromaVectorDB(VectorDB):
         distance_threshold: float = -1,
         **kwargs,
     ) -> QueryResults:
-        """
-        Retrieve documents from the collection of the vector database based on the queries.
+        """Retrieve documents from the collection of the vector database based on the queries.
 
         Args:
+        ----
             queries: List[str] | A list of queries. Each query is a string.
             collection_name: str | The name of the collection. Default is None.
             n_results: int | The number of relevant documents to return. Default is 10.
@@ -252,8 +264,10 @@ class ChromaVectorDB(VectorDB):
             kwargs: Dict | Additional keyword arguments.
 
         Returns:
+        -------
             QueryResults | The query results. Each query result is a list of list of tuples containing the document and
                 the distance.
+
         """
         collection = self.get_collection(collection_name)
         if isinstance(queries, str):
@@ -273,12 +287,15 @@ class ChromaVectorDB(VectorDB):
         """Converts a dictionary with list values to a list of Document.
 
         Args:
+        ----
             data_dict: A dictionary where keys map to lists or None.
 
         Returns:
+        -------
             List[Document] | The list of Document.
 
         Example:
+        -------
             ```python
             data_dict = {
                 "key1s": [1, 2, 3],
@@ -293,8 +310,8 @@ class ChromaVectorDB(VectorDB):
                 {"key1": 3, "key2": "c", "key4": "z"},
             ]
             ```
-        """
 
+        """
         results = []
         keys = [key for key in data_dict if data_dict[key] is not None]
 
@@ -309,10 +326,10 @@ class ChromaVectorDB(VectorDB):
     def get_docs_by_ids(
         self, ids: list[ItemID] = None, collection_name: str = None, include=None, **kwargs
     ) -> list[Document]:
-        """
-        Retrieve documents from the collection of the vector database based on the ids.
+        """Retrieve documents from the collection of the vector database based on the ids.
 
         Args:
+        ----
             ids: List[ItemID] | A list of document ids. If None, will return all the documents. Default is None.
             collection_name: str | The name of the collection. Default is None.
             include: List[str] | The fields to include. Default is None.
@@ -320,7 +337,9 @@ class ChromaVectorDB(VectorDB):
             kwargs: dict | Additional keyword arguments.
 
         Returns:
+        -------
             List[Document] | The results.
+
         """
         collection = self.get_collection(collection_name)
         include = include if include else ["metadatas", "documents"]

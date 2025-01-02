@@ -2,16 +2,18 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 def detect_outlier_zscore(csv_file, column_name, threshold=3):
-    """
-    Detect outliers in a CSV file based on a specified column. The outliers are determined by calculating the z-score of the data points in the column.
+    """Detect outliers in a CSV file based on a specified column. The outliers are determined by calculating the z-score of the data points in the column.
 
     Args:
+    ----
     csv_file (str): The path to the CSV file.
     column_name (str): The name of the column to calculate z-scores for.
     threshold (float, optional): The threshold value for determining outliers. By default set to 3.
 
     Returns:
+    -------
     list: A list of row indices where the z-score is above the threshold.
+
     """
     import numpy as np
     import pandas as pd

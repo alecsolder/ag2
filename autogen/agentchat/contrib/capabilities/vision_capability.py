@@ -53,12 +53,12 @@ class VisionCapability(AgentCapability):
         description_prompt: Optional[str] = DEFAULT_DESCRIPTION_PROMPT,
         custom_caption_func: Callable = None,
     ) -> None:
-        """
-        Initializes a new instance, setting up the configuration for interacting with
+        """Initializes a new instance, setting up the configuration for interacting with
         a Language Multimodal (LMM) client and specifying optional parameters for image
         description and captioning.
 
         Args:
+        ----
             lmm_config (Dict): Configuration for the LMM client, which is used to call
                 the LMM service for describing the image. This must be a dictionary containing
                 the necessary configuration parameters. If `lmm_config` is False or an empty dictionary,
@@ -78,9 +78,11 @@ class VisionCapability(AgentCapability):
                 If provided, we will not run the default self._get_image_caption method.
 
         Raises:
+        ------
             AssertionError: If neither a valid `lmm_config` nor a `custom_caption_func` is provided,
                 an AssertionError is raised to indicate that the Vision Capability requires
                 one of these to be valid for operation.
+
         """
         self._lmm_config = lmm_config
         self._description_prompt = description_prompt
@@ -106,8 +108,7 @@ class VisionCapability(AgentCapability):
         agent.register_hook(hookable_method="process_last_received_message", hook=self.process_last_received_message)
 
     def process_last_received_message(self, content: Union[str, list[dict]]) -> str:
-        """
-        Processes the last received message content by normalizing and augmenting it
+        """Processes the last received message content by normalizing and augmenting it
         with descriptions of any included images. The function supports input content
         as either a string or a list of dictionaries, where each dictionary represents
         a content item (e.g., text, image). If the content contains image URLs, it
@@ -121,17 +122,21 @@ class VisionCapability(AgentCapability):
         images cannot be displayed directly.
 
         Args:
+        ----
             content (Union[str, List[dict]]): The last received message content, which
                 can be a plain text string or a list of dictionaries representing
                 different types of content items (e.g., text, image_url).
 
         Returns:
+        -------
             str: The augmented message content
 
         Raises:
+        ------
             AssertionError: If an item in the content list is not a dictionary.
 
         Examples:
+        --------
             Assuming `self._get_image_caption(img_data)` returns
             "A beautiful sunset over the mountains" for the image.
 
@@ -161,6 +166,7 @@ class VisionCapability(AgentCapability):
             Output: "What's weather in this cool photo: `<img http://example.com/photo.jpg>` in case you can not see, the caption of this image is:
             A beautiful sunset over the mountains\n"
             (Caption added after the image)
+
         """
         copy.deepcopy(content)
         # normalize the content into the gpt-4v format for multimodal
@@ -192,11 +198,13 @@ class VisionCapability(AgentCapability):
         return aug_content
 
     def _get_image_caption(self, img_data: str) -> str:
-        """
-        Args:
+        """Args:
             img_data (str): base64 encoded image data.
-        Returns:
+
+        Returns
+        -------
             str: caption for the given image.
+
         """
         response = self._lmm_client.create(
             context=None,

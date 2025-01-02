@@ -34,7 +34,9 @@ class OpenAIRealtimeClient:
         """(Experimental) Client for OpenAI Realtime API.
 
         Args:
+        ----
             llm_config (dict[str, Any]): The config for the client.
+
         """
         self._llm_config = llm_config
         self._voice = voice
@@ -75,8 +77,10 @@ class OpenAIRealtimeClient:
         """Send the result of a function call to the OpenAI Realtime API.
 
         Args:
+        ----
             call_id (str): The ID of the function call.
             result (str): The result of the function call.
+
         """
         await self.connection.conversation.item.create(
             item={
@@ -92,8 +96,10 @@ class OpenAIRealtimeClient:
         """Send a text message to the OpenAI Realtime API.
 
         Args:
+        ----
             role (str): The role of the message.
             text (str): The text of the message.
+
         """
         await self.connection.response.cancel()
         await self.connection.conversation.item.create(
@@ -105,7 +111,9 @@ class OpenAIRealtimeClient:
         """Send audio to the OpenAI Realtime API.
 
         Args:
+        ----
             audio (str): The audio to send.
+
         """
         await self.connection.input_audio_buffer.append(audio=audio)
 
@@ -113,9 +121,11 @@ class OpenAIRealtimeClient:
         """Truncate audio in the OpenAI Realtime API.
 
         Args:
+        ----
             audio_end_ms (int): The end of the audio to truncate.
             content_index (int): The index of the content to truncate.
             item_id (str): The ID of the item to truncate.
+
         """
         await self.connection.conversation.item.truncate(
             audio_end_ms=audio_end_ms, content_index=content_index, item_id=item_id
@@ -136,7 +146,9 @@ class OpenAIRealtimeClient:
         """Send a session update to the OpenAI Realtime API.
 
         Args:
+        ----
             session_options (dict[str, Any]): The session options to update.
+
         """
         logger = self.logger
         logger.info(f"Sending session update: {session_options}")

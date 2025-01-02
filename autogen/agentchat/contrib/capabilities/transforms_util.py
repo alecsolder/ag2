@@ -17,8 +17,10 @@ def cache_key(content: MessageContentType, *args: Hashable) -> str:
     """Calculates the cache key for the given message content and any other hashable args.
 
     Args:
+    ----
         content (MessageContentType): The message content to calculate the cache key for.
         *args: Any additional hashable args to include in the cache key.
+
     """
     str_keys = [str(key) for key in (content, *args)]
     return "".join(str_keys)
@@ -28,8 +30,10 @@ def cache_content_get(cache: Optional[AbstractCache], key: str) -> Optional[tupl
     """Retrieves cachedd content from the cache.
 
     Args:
+    ----
         cache (None or AbstractCache): The cache to retrieve the content from. If None, the cache is ignored.
         key (str): The key to retrieve the content from.
+
     """
     if cache:
         cached_value = cache.get(key)
@@ -41,10 +45,12 @@ def cache_content_set(cache: Optional[AbstractCache], key: str, content: Message
     """Sets content into the cache.
 
     Args:
+    ----
         cache (None or AbstractCache): The cache to set the content into. If None, the cache is ignored.
         key (str): The key to set the content into.
         content (MessageContentType): The message content to set into the cache.
         *extra_values: Additional values to be passed to the cache.
+
     """
     if cache:
         cache_value = (content, *extra_values)
@@ -55,7 +61,9 @@ def min_tokens_reached(messages: list[dict], min_tokens: Optional[int]) -> bool:
     """Returns True if the total number of tokens in the messages is greater than or equal to the specified value.
 
     Args:
+    ----
         messages (List[Dict]): A list of messages to check.
+
     """
     if not min_tokens:
         return True
@@ -68,7 +76,9 @@ def count_text_tokens(content: MessageContentType) -> int:
     """Calculates the number of text tokens in the given message content.
 
     Args:
+    ----
         content (MessageContentType): The message content to calculate the number of text tokens for.
+
     """
     token_count = 0
     if isinstance(content, str):
@@ -91,7 +101,9 @@ def is_content_text_empty(content: MessageContentType) -> bool:
     """Checks if the content of the message does not contain any text.
 
     Args:
+    ----
         content (MessageContentType): The message content to check.
+
     """
     if isinstance(content, str):
         return content == ""
@@ -111,9 +123,11 @@ def should_transform_message(message: dict[str, Any], filter_dict: Optional[dict
     """Validates whether the transform should be applied according to the filter dictionary.
 
     Args:
+    ----
         message (Dict[str, Any]): The message to validate.
         filter_dict (None or Dict[str, Any]): The filter dictionary to validate against. If None, the transform is always applied.
         exclude (bool): Whether to exclude messages that match the filter dictionary.
+
     """
     if not filter_dict:
         return True

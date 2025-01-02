@@ -51,13 +51,15 @@ def filter_results_by_distance(results: QueryResults, distance_threshold: float 
     """Filters results based on a distance threshold.
 
     Args:
+    ----
         results: QueryResults | The query results. List[List[Tuple[Document, float]]]
         distance_threshold: The maximum distance allowed for results.
 
     Returns:
+    -------
         QueryResults | A filtered results containing only distances smaller than the threshold.
-    """
 
+    """
     if distance_threshold > 0:
         results = [[(key, value) for key, value in data if value < distance_threshold] for data in results]
 
@@ -68,16 +70,19 @@ def chroma_results_to_query_results(data_dict: dict[str, list[list[Any]]], speci
     """Converts a dictionary with list-of-list values to a list of tuples.
 
     Args:
+    ----
         data_dict: A dictionary where keys map to lists of lists or None.
         special_key: The key in the dictionary containing the special values
                     for each tuple.
 
     Returns:
+    -------
         A list of tuples, where each tuple contains a sub-dictionary with
         some keys from the original dictionary and the value from the
         special_key.
 
     Example:
+    -------
         ```python
         data_dict = {
             "key1s": [[1, 2, 3], [4, 5, 6], [7, 8, 9]],
@@ -105,8 +110,8 @@ def chroma_results_to_query_results(data_dict: dict[str, list[list[Any]]], speci
             ],
         ]
         ```
-    """
 
+    """
     keys = [
         key
         for key in data_dict

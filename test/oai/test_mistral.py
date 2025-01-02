@@ -30,7 +30,7 @@ except ImportError:
 
 
 # Fixtures for mock data
-@pytest.fixture
+@pytest.fixture()
 def mock_response():
     class MockResponse:
         def __init__(self, text, choices, usage, cost, model):
@@ -43,7 +43,7 @@ def mock_response():
     return MockResponse
 
 
-@pytest.fixture
+@pytest.fixture()
 def mistral_client():
     return MistralAIClient(api_key="fake_api_key")
 
@@ -51,7 +51,6 @@ def mistral_client():
 # Test initialization and configuration
 @pytest.mark.skipif(skip, reason="Mistral.AI dependency is not installed")
 def test_initialization():
-
     # Missing any api_key
     with pytest.raises(AssertionError) as assertinfo:
         MistralAIClient()  # Should raise an AssertionError due to missing api_key

@@ -6,16 +6,18 @@ from autogen.coding.func_with_reqs import with_requirements
 
 @with_requirements(["PyMuPDF"])
 def extract_pdf_text(pdf_path, page_number=None):
-    """
-    Extracts text from a specified page or the entire PDF file.
+    """Extracts text from a specified page or the entire PDF file.
 
     Args:
+    ----
         pdf_path (str): The path to the PDF file.
         page_number (int, optional): The page number to extract (starting from 0). If not provided,
             the function will extract text from the entire PDF file.
 
     Returns:
+    -------
         str: The extracted text.
+
     """
     import fitz
 

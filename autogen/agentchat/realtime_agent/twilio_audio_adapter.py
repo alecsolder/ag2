@@ -36,8 +36,10 @@ class TwilioAudioAdapter(RealtimeObserver):
         """Adapter for streaming audio from Twilio to OpenAI Realtime API and vice versa.
 
         Args:
+        ----
             websocket: WebSocket
                 the websocket connection to the Twilio service
+
         """
         super().__init__(logger=logger)
         self.websocket = websocket

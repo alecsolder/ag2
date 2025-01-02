@@ -17,11 +17,11 @@ import autogen
 from autogen import AssistantAgent, UserProxyAgent
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from conftest import skip_openai  # noqa: E402
+from conftest import skip_openai
 
 
 @pytest.mark.skipif(skip_openai, reason="requested to skip openai tests")
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_chats():
     config_list_4omini = autogen.config_list_from_json(
         OAI_CONFIG_LIST,

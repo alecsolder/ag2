@@ -4,17 +4,19 @@
 def calculate_fraction_sum(
     fraction1_numerator: int, fraction1_denominator: int, fraction2_numerator: int, fraction2_denominator: int
 ):
-    """
-    Calculates the sum of two fractions and returns the result as a mixed number.
+    """Calculates the sum of two fractions and returns the result as a mixed number.
 
     Args:
+    ----
         fraction1_numerator: The numerator of the first fraction.
         fraction1_denominator: The denominator of the first fraction.
         fraction2_numerator: The numerator of the second fraction.
         fraction2_denominator: The denominator of the second fraction.
 
     Returns:
+    -------
         str: The sum of the two fractions as a mixed number in the format 'a b/c'
+
     """
     from fractions import Fraction
 

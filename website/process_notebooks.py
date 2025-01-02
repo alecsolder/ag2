@@ -88,7 +88,6 @@ def load_metadata(notebook: Path) -> dict:
 
 def skip_reason_or_none_if_ok(notebook: Path) -> str | None:
     """Return a reason to skip the notebook, or None if it should not be skipped."""
-
     if notebook.suffix != ".ipynb":
         return "not a notebook"
 
@@ -109,7 +108,7 @@ def skip_reason_or_none_if_ok(notebook: Path) -> str | None:
     # <!-- and --> must exists on lines on their own
     if first_cell["cell_type"] == "markdown" and first_cell["source"][0].strip() == "<!--":
         raise ValueError(
-            f"Error in {str(notebook.resolve())} - Front matter should be defined in the notebook metadata now."
+            f"Error in {notebook.resolve()!s} - Front matter should be defined in the notebook metadata now."
         )
 
     metadata = load_metadata(notebook)
@@ -162,7 +161,6 @@ def extract_title(notebook: Path) -> str | None:
 
 def process_notebook(src_notebook: Path, website_dir: Path, notebook_dir: Path, quarto_bin: str, dry_run: bool) -> str:
     """Process a single notebook."""
-
     in_notebook_dir = "notebook" in src_notebook.parts
 
     metadata = load_metadata(src_notebook)
@@ -355,13 +353,11 @@ def add_front_matter_to_metadata_mdx(
 
 
 def convert_callout_blocks(content: str) -> str:
-    """
-    Converts callout blocks in the following formats:
+    """Converts callout blocks in the following formats:
     1) Plain callout blocks using ::: syntax.
     2) Blocks using 3-4 backticks + (mdx-code-block or {=mdx}) + ::: syntax.
     Transforms them into custom HTML/component syntax.
     """
-
     callout_types = {
         "tip": "Tip",
         "note": "Note",
@@ -441,14 +437,16 @@ def convert_callout_blocks(content: str) -> str:
 
 
 def convert_mdx_image_blocks(content: str, rendered_mdx: Path, website_dir: Path) -> str:
-    """
-    Converts MDX code block image syntax to regular markdown image syntax.
+    """Converts MDX code block image syntax to regular markdown image syntax.
 
     Args:
+    ----
         content (str): The markdown content containing mdx-code-block image syntax
 
     Returns:
+    -------
         str: The converted markdown content with standard image syntax
+
     """
 
     def resolve_path(match):
@@ -605,11 +603,12 @@ def copy_examples_mdx_files(website_dir: str) -> None:
 
 
 def update_navigation_with_notebooks(website_dir: Path) -> None:
-    """
-    Updates mint.json navigation to include notebook entries from NotebooksMetadata.mdx.
+    """Updates mint.json navigation to include notebook entries from NotebooksMetadata.mdx.
 
     Args:
+    ----
         website_dir (Path): Root directory of the website
+
     """
     mint_json_path = (website_dir / "mint.json").resolve()
     metadata_path = (website_dir / "snippets" / "data" / "NotebooksMetadata.mdx").resolve()
@@ -677,13 +676,14 @@ def update_navigation_with_notebooks(website_dir: Path) -> None:
 
 
 def fix_internal_references(content: str, root_path: Path, current_file_path: Path) -> str:
-    """
-    Resolves internal markdown references relative to root_dir and returns fixed content.
+    """Resolves internal markdown references relative to root_dir and returns fixed content.
 
     Args:
+    ----
         content: Markdown content to fix
         root_path: Root directory for resolving paths
         current_file_path: Path of the current file being processed
+
     """
 
     def resolve_link(match):

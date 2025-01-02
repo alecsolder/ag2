@@ -12,8 +12,7 @@ from .neo4j_graph_query_engine import Neo4jGraphQueryEngine
 
 
 class Neo4jGraphCapability(GraphRagCapability):
-    """
-    The Neo4j graph capability integrates Neo4j Property graph into a graph rag agent.
+    """The Neo4j graph capability integrates Neo4j Property graph into a graph rag agent.
     Ref: https://neo4j.com/labs/genai-ecosystem/llamaindex/#_property_graph_constructing_modules
 
 
@@ -21,17 +20,13 @@ class Neo4jGraphCapability(GraphRagCapability):
     """
 
     def __init__(self, query_engine: Neo4jGraphQueryEngine):
-        """
-        initialize GraphRAG capability with a graph query engine
-        """
+        """Initialize GraphRAG capability with a graph query engine"""
         self.query_engine = query_engine
 
     def add_to_agent(self, agent: UserProxyAgent):
-        """
-        Add Neo4j GraphRAG capability to a UserProxyAgent.
+        """Add Neo4j GraphRAG capability to a UserProxyAgent.
         The restriction to a UserProxyAgent to make sure the returned message only contains information retrieved from the graph DB instead of any LLMs.
         """
-
         self.graph_rag_agent = agent
 
         # Validate the agent config
@@ -53,19 +48,21 @@ class Neo4jGraphCapability(GraphRagCapability):
         sender: Optional[Agent] = None,
         config: Optional[Any] = None,
     ) -> tuple[bool, Union[str, dict, None]]:
-        """
-        Query neo4j and return the message. Internally, it queries the Property graph
+        """Query neo4j and return the message. Internally, it queries the Property graph
         and returns the answer from the graph query engine.
         TODO: reply with a dictionary including both the answer and semantic source triplets.
 
         Args:
+        ----
             recipient: The agent instance that will receive the message.
             messages: A list of messages in the conversation history with the sender.
             sender: The agent instance that sent the message.
             config: Optional configuration for message processing.
 
         Returns:
+        -------
             A tuple containing a boolean indicating success and the assistant's reply.
+
         """
         question = self._get_last_question(messages[-1])
 

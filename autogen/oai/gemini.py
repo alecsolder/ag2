@@ -6,8 +6,8 @@
 # SPDX-License-Identifier: MIT
 """Create a OpenAI-compatible client for Gemini features.
 
-
 Example:
+-------
     ```python
     llm_config={
         "config_list": [{
@@ -35,6 +35,7 @@ Resources:
 - https://cloud.google.com/vertex-ai/generative-ai/docs/migrate/migrate-from-azure-to-gemini
 - https://blog.google/technology/ai/google-gemini-pro-imagen-duet-ai-update/
 - https://ai.google.dev/api/python/google/generativeai/ChatSession
+
 """
 
 from __future__ import annotations
@@ -127,6 +128,7 @@ class GeminiClient:
         like in Google Cloud Shell.
 
         Args:
+        ----
             api_key (str): The API key for using Gemini.
                 credentials (google.auth.credentials.Credentials): credentials to be used for authentication with vertexai.
             google_application_credentials (str): Path to the JSON service account key file of the service account.
@@ -135,8 +137,9 @@ class GeminiClient:
             project_id (str): Google Cloud project id, which is only valid in case no API key is specified.
             location (str): Compute region to be used, like 'us-west1'.
                 This parameter is only valid in case no API key is specified.
+
         """
-        self.api_key = kwargs.get("api_key", None)
+        self.api_key = kwargs.get("api_key")
         if not self.api_key:
             self.api_key = os.getenv("GOOGLE_GEMINI_API_KEY")
             if self.api_key is None:
@@ -155,8 +158,7 @@ class GeminiClient:
             warnings.warn("response_format is not supported for Gemini. It will be ignored.", UserWarning)
 
     def message_retrieval(self, response) -> list:
-        """
-        Retrieve and return a list of strings or a list of Choice.Message from the response.
+        """Retrieve and return a list of strings or a list of Choice.Message from the response.
 
         NOTE: if a list of Choice.Message is returned, it currently needs to contain the fields of OpenAI's ChatCompletion Message object,
         since that is expected for function or tool calling in the rest of the codebase at the moment, unless a custom agent is being used.
@@ -179,7 +181,6 @@ class GeminiClient:
         }
 
     def create(self, params: dict) -> ChatCompletion:
-
         if self.use_vertexai:
             self._initialize_vertexai(**params)
         else:
@@ -203,7 +204,7 @@ class GeminiClient:
         messages = params.get("messages", [])
         stream = params.get("stream", False)
         n_response = params.get("n", 1)
-        system_instruction = params.get("system_instruction", None)
+        system_instruction = params.get("system_instruction")
         response_validation = params.get("response_validation", True)
         if "tools" in params:
             tools = self._tools_to_gemini_tools(params["tools"])
@@ -266,10 +267,8 @@ class GeminiClient:
         random_id = random.randint(0, 10000)
         prev_function_calls = []
         for part in response.parts:
-
             # Function calls
             if fn_call := part.function_call:
-
                 # If we have a repeated function call, ignore it
                 if fn_call not in prev_function_calls:
                     autogen_tool_calls.append(
@@ -355,7 +354,6 @@ class GeminiClient:
             return rst, "tool"
         elif "tool_calls" in message and len(message["tool_calls"]) != 0:
             for tool_call in message["tool_calls"]:
-
                 function_id = tool_call["id"]
                 function_name = tool_call["function"]["name"]
                 self.tool_call_function_map[function_id] = function_name
@@ -468,13 +466,7 @@ class GeminiClient:
                     if self.use_vertexai
                     else rst.append(Content(parts=parts, role=role))
                 )
-            elif part_type == "tool":
-                rst.append(
-                    VertexAIContent(parts=parts, role="function")
-                    if self.use_vertexai
-                    else rst.append(Content(parts=parts, role="function"))
-                )
-            elif part_type == "tool_call":
+            elif part_type == "tool" or part_type == "tool_call":
                 rst.append(
                     VertexAIContent(parts=parts, role="function")
                     if self.use_vertexai
@@ -527,7 +519,6 @@ class GeminiClient:
 
     def _tools_to_gemini_tools(self, tools: list[dict[str, Any]]) -> list[Tool]:
         """Create Gemini tools (as typically requires Callables)"""
-
         functions = []
         for tool in tools:
             if self.use_vertexai:
@@ -610,7 +601,6 @@ class GeminiClient:
 
     def _create_gemini_function_parameters(function_parameter: dict[str, any]) -> dict[str, any]:
         """Convert function parameters to Gemini format, recursive"""
-
         function_parameter["type_"] = function_parameter["type"].upper()
 
         # Parameter properties and items
@@ -687,7 +677,6 @@ def get_image_data(image_file: str, use_b64=True) -> bytes:
 
 
 def calculate_gemini_cost(use_vertexai: bool, input_tokens: int, output_tokens: int, model_name: str) -> float:
-
     def total_cost_mil(cost_per_mil_input: float, cost_per_mil_output: float):
         # Cost per million
         return cost_per_mil_input * input_tokens / 1e6 + cost_per_mil_output * output_tokens / 1e6

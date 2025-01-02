@@ -40,6 +40,7 @@ class ServerConnection(Protocol):
         """Send a message to the client.
 
         Args:
+        ----
             message (Union[Data, Iterable[Data]]): The message to send.
 
         """
@@ -49,9 +50,11 @@ class ServerConnection(Protocol):
         """Receive a message from the client.
 
         Args:
+        ----
             timeout (Optional[float], optional): The timeout for the receive operation. Defaults to None.
 
         Returns:
+        -------
             Data: The message received from the client.
 
         """
@@ -87,10 +90,13 @@ class IOWebsockets(IOStream):
         """Initialize the websocket input/output stream.
 
         Args:
+        ----
             websocket (ServerConnection): The websocket server.
 
         Raises:
+        ------
             ImportError: If the websockets module is not available.
+
         """
         if _import_error is not None:
             raise _import_error  # pragma: no cover
@@ -126,6 +132,7 @@ class IOWebsockets(IOStream):
         """Factory function to create a websocket input/output stream.
 
         Args:
+        ----
             host (str, optional): The host to bind the server to. Defaults to "127.0.0.1".
             port (int, optional): The port to bind the server to. Defaults to 8765.
             on_connect (Callable[[IOWebsockets], None]): The function to be executed on client connection. Typically creates agents and initiate chat.
@@ -133,7 +140,9 @@ class IOWebsockets(IOStream):
             kwargs (Any): Additional keyword arguments to pass to the websocket server.
 
         Yields:
+        ------
             str: The URI of the websocket server.
+
         """
         server_dict: dict[str, WebSocketServer] = {}
 
@@ -187,10 +196,12 @@ class IOWebsockets(IOStream):
         """Print data to the output stream.
 
         Args:
+        ----
             objects (any): The data to print.
             sep (str, optional): The separator between objects. Defaults to " ".
             end (str, optional): The end of the output. Defaults to "\n".
             flush (bool, optional): Whether to flush the output. Defaults to False.
+
         """
         xs = sep.join(map(str, objects)) + end
         self._websocket.send(xs)
@@ -199,10 +210,12 @@ class IOWebsockets(IOStream):
         """Read a line from the input stream.
 
         Args:
+        ----
             prompt (str, optional): The prompt to display. Defaults to "".
             password (bool, optional): Whether to read a password. Defaults to False.
 
         Returns:
+        -------
             str: The line read from the input stream.
 
         """

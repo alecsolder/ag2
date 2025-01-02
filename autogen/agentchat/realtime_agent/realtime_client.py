@@ -16,8 +16,10 @@ class RealtimeClientProtocol(Protocol):
         """Send the result of a function call to a Realtime API.
 
         Args:
+        ----
             call_id (str): The ID of the function call.
             result (str): The result of the function call.
+
         """
         ...
 
@@ -25,8 +27,10 @@ class RealtimeClientProtocol(Protocol):
         """Send a text message to a Realtime API.
 
         Args:
+        ----
             role (str): The role of the message.
             text (str): The text of the message.
+
         """
         ...
 
@@ -34,7 +38,9 @@ class RealtimeClientProtocol(Protocol):
         """Send audio to a Realtime API.
 
         Args:
+        ----
             audio (str): The audio to send.
+
         """
         ...
 
@@ -42,9 +48,11 @@ class RealtimeClientProtocol(Protocol):
         """Truncate audio in a Realtime API.
 
         Args:
+        ----
             audio_end_ms (int): The end of the audio to truncate.
             content_index (int): The index of the content to truncate.
             item_id (str): The ID of the item to truncate.
+
         """
         ...
 
@@ -52,7 +60,9 @@ class RealtimeClientProtocol(Protocol):
         """Send a session update to a Realtime API.
 
         Args:
+        ----
             session_options (dict[str, Any]): The session options to update.
+
         """
         ...
 

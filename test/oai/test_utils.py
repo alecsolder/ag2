@@ -17,7 +17,7 @@ from unittest.mock import patch
 import pytest
 from conftest import MOCK_OPEN_AI_API_KEY
 
-import autogen  # noqa: E402
+import autogen
 from autogen.oai.openai_utils import DEFAULT_AZURE_API_VERSION, filter_config, is_valid_api_key
 
 # Example environment variables
@@ -102,7 +102,7 @@ def _compare_lists_of_dicts(list1: list[dict], list2: list[dict]) -> bool:
     return dump1 == dump2
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_os_environ():
     with mock.patch.dict(os.environ, ENV_VARS):
         yield

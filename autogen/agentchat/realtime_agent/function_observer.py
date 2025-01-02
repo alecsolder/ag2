@@ -24,7 +24,9 @@ class FunctionObserver(RealtimeObserver):
         """Handle function call events from the OpenAI Realtime API.
 
         Args:
+        ----
             event (dict[str, Any]): The event from the OpenAI Realtime API.
+
         """
         if event["type"] == "response.function_call_arguments.done":
             self.logger.info(f"Received event: {event['type']}", event)
@@ -38,11 +40,12 @@ class FunctionObserver(RealtimeObserver):
         """Call a function registered with the agent.
 
         Args:
+        ----
             call_id (str): The ID of the function call.
             name (str): The name of the function to call.
             kwargs (Any[str, Any]): The arguments to pass to the function.
-        """
 
+        """
         if name in self.agent._registred_realtime_functions:
             _, func = self.agent._registred_realtime_functions[name]
             func = func if asyncio.iscoroutinefunction(func) else asyncify(func)

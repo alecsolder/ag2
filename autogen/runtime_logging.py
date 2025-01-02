@@ -42,14 +42,16 @@ def start(
     logger_type: Literal["sqlite", "file"] = "sqlite",
     config: dict[str, Any] | None = None,
 ) -> str:
-    """
-    Start logging for the runtime.
+    """Start logging for the runtime.
+
     Args:
+    ----
         logger (BaseLogger):    A logger instance
         logger_type (str):      The type of logger to use (default: sqlite)
         config (dict):          Configuration for the logger
     Returns:
         session_id (str(uuid.uuid4)):       a unique id for the logging session
+
     """
     global autogen_logger
     global is_logging

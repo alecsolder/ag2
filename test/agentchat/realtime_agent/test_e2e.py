@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 import pytest
 from anyio import Event, move_on_after, sleep
 from asyncer import create_task_group
-from conftest import reason, skip_openai  # noqa: E402
+from conftest import reason, skip_openai
 from fastapi import FastAPI, WebSocket
 from fastapi.testclient import TestClient
 from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
@@ -24,7 +24,7 @@ logger = getLogger(__name__)
 
 @pytest.mark.skipif(skip_openai, reason=reason)
 class TestE2E:
-    @pytest.fixture
+    @pytest.fixture()
     def llm_config(self) -> dict[str, Any]:
         """Fixture to load the LLM config."""
         config_list = autogen.config_list_from_json(
@@ -40,7 +40,7 @@ class TestE2E:
             "temperature": 0.0,
         }
 
-    @pytest.fixture
+    @pytest.fixture()
     def openai_api_key(self, llm_config: dict[str, Any]) -> str:
         """Fixture to get the OpenAI API key."""
         return llm_config["config_list"][0]["api_key"]  # type: ignore[no-any-return]

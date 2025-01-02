@@ -198,12 +198,13 @@ class SqliteLogger(BaseLogger):
                 self._run_query(query=query, args=args)
 
     def _run_query(self, query: str, args: tuple[Any, ...] = ()) -> None:
-        """
-        Executes a given SQL query.
+        """Executes a given SQL query.
 
         Args:
+        ----
             query (str):        The SQL query to execute.
             args (Tuple):       The arguments to pass to the SQL query.
+
         """
         try:
             with lock:
@@ -213,11 +214,12 @@ class SqliteLogger(BaseLogger):
             logger.error("[sqlite logger]Error running query with query %s and args %s: %s", query, args, e)
 
     def _run_query_script(self, script: str) -> None:
-        """
-        Executes SQL script.
+        """Executes SQL script.
 
         Args:
+        ----
             script (str):       SQL script to execute.
+
         """
         try:
             with lock:
@@ -383,7 +385,6 @@ class SqliteLogger(BaseLogger):
         self._run_query(query=query, args=args)
 
     def log_function_use(self, source: str | Agent, function: F, args: dict[str, Any], returns: Any) -> None:
-
         if self.con is None:
             return
 

@@ -22,9 +22,11 @@ class TestPydanticAITool:
             """Get me foobar.
 
             Args:
+            ----
                 a: apple pie
                 b: banana cake
                 c: carrot smoothie
+
             """
             return f"{a} {b} {c}"
 

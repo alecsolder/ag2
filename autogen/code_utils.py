@@ -56,17 +56,21 @@ def content_str(content: Union[str, list[Union[UserMessageTextContentPart, UserM
     represented by a placeholder image token. If the content is None, an empty string is returned.
 
     Args:
+    ----
         - content (Union[str, List, None]): The content to be processed. Can be a string, a list of dictionaries
                                       representing text and image URLs, or None.
 
     Returns:
+    -------
         str: A string representation of the input content. Image URLs are replaced with an image token.
 
     Note:
+    ----
     - The function expects each dictionary in the list to have a "type" key that is either "text" or "image_url".
       For "text" type, the "text" key's value is appended to the result. For "image_url", an image token is appended.
     - This function is useful for handling content that may include both text and image references, especially
       in contexts where images need to be represented as placeholders.
+
     """
     if content is None:
         return ""
@@ -90,7 +94,7 @@ def content_str(content: Union[str, list[Union[UserMessageTextContentPart, UserM
 
 
 def infer_lang(code: str) -> str:
-    """infer the language for the code.
+    """Infer the language for the code.
     TODO: make it robust.
     """
     if code.startswith("python ") or code.startswith("pip") or code.startswith("python3 "):
@@ -113,6 +117,7 @@ def extract_code(
     """Extract code from a text.
 
     Args:
+    ----
         text (str or List): The content to extract code from. The content can be
             a string or a list, as returned by standard GPT or multimodal GPT.
         pattern (str, optional): The regular expression pattern for finding the
@@ -121,9 +126,11 @@ def extract_code(
             extracting single line code. Defaults to False.
 
     Returns:
+    -------
         list: A list of tuples, each containing the language and the code.
           If there is no code block in the input text, the language would be "unknown".
           If there is code block but the language is not specified, the language would be "".
+
     """
     text = content_str(text)
     if not detect_single_line_code:
@@ -150,13 +157,16 @@ def generate_code(pattern: str = CODE_BLOCK_PATTERN, **config) -> tuple[str, flo
     """`(openai<1)` Generate code.
 
     Args:
+    ----
         pattern (Optional, str): The regular expression pattern for finding the code block.
             The default pattern is for finding a code block in a markdown file.
         config (Optional, dict): The configuration for the API call.
 
     Returns:
+    -------
         str: The generated code.
         float: The cost of the generation.
+
     """
     response = oai.Completion.create(**config)
     return extract_code(oai.Completion.extract_text(response)[0], pattern), response["cost"]
@@ -196,14 +206,17 @@ def improve_code(files, objective, suggest_only=True, **config):
     """`(openai<1)` Improve the code to achieve a given objective.
 
     Args:
+    ----
         files (list): A list of file names containing the source code.
         objective (str): The objective to achieve.
         suggest_only (bool): Whether to return only the suggestions or the improved code.
         config (Optional, dict): The configuration for the API call.
 
     Returns:
+    -------
         str: The improved code if suggest_only=False; a list of suggestions if suggest_only=True (default).
         float: The cost of the generation.
+
     """
     code = ""
     for file_name in files:
@@ -271,8 +284,10 @@ def _cmd(lang: str) -> str:
 def is_docker_running() -> bool:
     """Check if docker is running.
 
-    Returns:
+    Returns
+    -------
         bool: True if docker is running; False otherwise.
+
     """
     try:
         client = docker.from_env()
@@ -285,8 +300,10 @@ def is_docker_running() -> bool:
 def in_docker_container() -> bool:
     """Check if the code is running in a docker container.
 
-    Returns:
+    Returns
+    -------
         bool: True if the code is running in a docker container; False otherwise.
+
     """
     return os.path.exists("/.dockerenv")
 
@@ -336,10 +353,13 @@ def _sanitize_filename_for_docker_tag(filename: str) -> str:
     format.
 
     Args:
+    ----
         filename (str): The filename to be converted.
 
     Returns:
+    -------
         str: The sanitized Docker tag.
+
     """
     # Replace any character not allowed with an underscore
     allowed_chars = set(string.ascii_letters + string.digits + "_.-")
@@ -365,6 +385,7 @@ def execute_code(
     This function is not tested on MacOS.
 
     Args:
+    ----
         code (Optional, str): The code to execute.
             If None, the code from the file specified by filename will be executed.
             Either code or filename must be provided.
@@ -392,9 +413,11 @@ def execute_code(
         lang (Optional, str): The language of the code. Default is "python".
 
     Returns:
+    -------
         int: 0 if the code executes successfully.
         str: The error message if the code fails to execute; the stdout otherwise.
         image: The docker image name after container run when docker is used.
+
     """
     if all((code is None, filename is None)):
         error_msg = f"Either {code=} or {filename=} must be provided."
@@ -556,12 +579,15 @@ def generate_assertions(definition: str, **config) -> tuple[str, float]:
     """`(openai<1)` Generate assertions for a function.
 
     Args:
+    ----
         definition (str): The function definition, including the signature and docstr.
         config (Optional, dict): The configuration for the API call.
 
     Returns:
+    -------
         str: The generated assertions.
         float: The cost of the generation.
+
     """
     params = {**_GENERATE_ASSERTIONS_CONFIG, **config}
     response = oai.Completion.create(
@@ -593,6 +619,7 @@ def eval_function_completions(
     """`(openai<1)` Select a response from a list of responses for the function completion task (using generated assertions), and/or evaluate if the task is successful using a gold test.
 
     Args:
+    ----
         responses (list): The list of responses.
         definition (str): The input definition.
         test (Optional, str): The test code.
@@ -602,7 +629,9 @@ def eval_function_completions(
         timeout (Optional, float): The timeout for executing the code.
 
     Returns:
+    -------
         dict: The success metrics.
+
     """
     n = len(responses)
     if assertions is None:
@@ -698,14 +727,17 @@ def implement(
     """`(openai<1)` Implement a function from a definition.
 
     Args:
+    ----
         definition (str): The function definition, including the signature and docstr.
         configs (list): The list of configurations for completion.
         assertions (Optional, str or Callable): The assertion code which serves as a filter of the responses, or an assertion generator.
 
     Returns:
+    -------
         str: The implementation.
         float: The cost of the implementation.
         int: The index of the configuration which generates the implementation.
+
     """
     cost = 0
     configs = configs or _IMPLEMENT_CONFIGS
@@ -733,11 +765,15 @@ def create_virtual_env(dir_path: str, **env_args) -> SimpleNamespace:
     """Creates a python virtual environment and returns the context.
 
     Args:
+    ----
         dir_path (str): Directory path where the env will be created.
         **env_args: Any extra args to pass to the `EnvBuilder`
 
     Returns:
-        SimpleNamespace: the virtual env context object."""
+    -------
+        SimpleNamespace: the virtual env context object.
+
+    """
     if not env_args:
         env_args = {"with_pip": True}
     env_builder = venv.EnvBuilder(**env_args)

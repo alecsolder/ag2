@@ -25,11 +25,12 @@ LLMConfig = dict[str, Union[None, float, int, ConfigItem, list[ConfigItem]]]
 class BaseLogger(ABC):
     @abstractmethod
     def start(self) -> str:
-        """
-        Open a connection to the logging database, and start recording.
+        """Open a connection to the logging database, and start recording.
 
-        Returns:
+        Returns
+        -------
             session_id (str):     a unique id for the logging session
+
         """
         ...
 
@@ -46,14 +47,14 @@ class BaseLogger(ABC):
         cost: float,
         start_time: str,
     ) -> None:
-        """
-        Log a chat completion to database.
+        """Log a chat completion to database.
 
         In AutoGen, chat completions are somewhat complicated because they are handled by the `autogen.oai.OpenAIWrapper` class.
         One invocation to `create` can lead to multiple underlying OpenAI calls, depending on the llm_config list used, and
         any errors or retries.
 
         Args:
+        ----
             invocation_id (uuid):               A unique identifier for the invocation to the OpenAIWrapper.create method call
             client_id (int):                    A unique identifier for the underlying OpenAI client instance
             wrapper_id (int):                   A unique identifier for the OpenAIWrapper instance
@@ -63,76 +64,78 @@ class BaseLogger(ABC):
             is_cached (int):                    1 if the response was a cache hit, 0 otherwise
             cost(float):                        The cost for OpenAI response
             start_time (str):                   A string representing the moment the request was initiated
+
         """
         ...
 
     @abstractmethod
     def log_new_agent(self, agent: ConversableAgent, init_args: dict[str, Any]) -> None:
-        """
-        Log the birth of a new agent.
+        """Log the birth of a new agent.
 
         Args:
+        ----
             agent (ConversableAgent):   The agent to log.
             init_args (dict):           The arguments passed to the construct the conversable agent
+
         """
         ...
 
     @abstractmethod
     def log_event(self, source: str | Agent, name: str, **kwargs: dict[str, Any]) -> None:
-        """
-        Log an event for an agent.
+        """Log an event for an agent.
 
         Args:
+        ----
             source (str or Agent):      The source/creator of the event as a string name or an Agent instance
             name (str):                 The name of the event
             kwargs (dict):              The event information to log
+
         """
         ...
 
     @abstractmethod
     def log_new_wrapper(self, wrapper: OpenAIWrapper, init_args: dict[str, LLMConfig | list[LLMConfig]]) -> None:
-        """
-        Log the birth of a new OpenAIWrapper.
+        """Log the birth of a new OpenAIWrapper.
 
         Args:
+        ----
             wrapper (OpenAIWrapper):    The wrapper to log.
             init_args (dict):           The arguments passed to the construct the wrapper
+
         """
         ...
 
     @abstractmethod
     def log_new_client(self, client: AzureOpenAI | OpenAI, wrapper: OpenAIWrapper, init_args: dict[str, Any]) -> None:
-        """
-        Log the birth of a new OpenAIWrapper.
+        """Log the birth of a new OpenAIWrapper.
 
         Args:
+        ----
             wrapper (OpenAI):           The OpenAI client to log.
             init_args (dict):           The arguments passed to the construct the client
+
         """
         ...
 
     @abstractmethod
     def log_function_use(self, source: str | Agent, function: F, args: dict[str, Any], returns: Any) -> None:
-        """
-        Log the use of a registered function (could be a tool)
+        """Log the use of a registered function (could be a tool)
 
         Args:
+        ----
             source (str or Agent):      The source/creator of the event as a string name or an Agent instance
             function (F):               The function information
             args (dict):                The function args to log
             returns (any):              The return
+
         """
 
     @abstractmethod
     def stop(self) -> None:
-        """
-        Close the connection to the logging database, and stop logging.
-        """
+        """Close the connection to the logging database, and stop logging."""
         ...
 
     @abstractmethod
     def get_connection(self) -> None | sqlite3.Connection:
-        """
-        Return a connection to the logging database.
-        """
+        """Return a connection to the logging database."""
         ...

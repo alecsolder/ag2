@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 from anyio import move_on_after
 from asyncer import create_task_group
-from conftest import MOCK_OPEN_AI_API_KEY, reason, skip_openai  # noqa: E402
+from conftest import MOCK_OPEN_AI_API_KEY, reason, skip_openai
 from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
 
 import autogen
@@ -17,7 +17,7 @@ from autogen.agentchat.realtime_agent.realtime_client import RealtimeClientProto
 
 
 class TestOAIRealtimeClient:
-    @pytest.fixture
+    @pytest.fixture()
     def llm_config(self) -> dict[str, Any]:
         config_list = autogen.config_list_from_json(
             OAI_CONFIG_LIST,
@@ -32,7 +32,7 @@ class TestOAIRealtimeClient:
             "temperature": 0.8,
         }
 
-    @pytest.fixture
+    @pytest.fixture()
     def client(self, llm_config: dict[str, Any]) -> RealtimeClientProtocol:
         return OpenAIRealtimeClient(
             llm_config=llm_config,

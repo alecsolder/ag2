@@ -304,7 +304,7 @@ def test_multi_tool_call():
 
 
 @pytest.mark.skipif(not TOOL_ENABLED, reason="openai>=1.1.0 not installed")
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_async_multi_tool_call():
     class FakeAgent(autogen.Agent):
         def __init__(self, name):

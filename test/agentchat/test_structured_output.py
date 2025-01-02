@@ -18,7 +18,7 @@ from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
 import autogen
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from conftest import MOCK_OPEN_AI_API_KEY, reason, skip_openai  # noqa: E402
+from conftest import MOCK_OPEN_AI_API_KEY, reason, skip_openai
 
 
 @pytest.mark.skipif(skip_openai, reason=reason)
@@ -83,7 +83,7 @@ class MathReasoning(BaseModel):
         return f"{steps_output}\n\nFinal Answer: {self.final_answer}"
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_assistant():
     """Set up a mocked AssistantAgent with a predefined response format."""
     config_list = [{"model": "gpt-4o", "api_key": MOCK_OPEN_AI_API_KEY, "response_format": MathReasoning}]

@@ -19,7 +19,7 @@ except ImportError:
 
 
 # Fixtures for mock data
-@pytest.fixture
+@pytest.fixture()
 def mock_response():
     class MockResponse:
         def __init__(self, text, choices, usage, cost, model):
@@ -32,9 +32,8 @@ def mock_response():
     return MockResponse
 
 
-@pytest.fixture
+@pytest.fixture()
 def ollama_client():
-
     # Set Ollama client with some default values
     client = OllamaClient()
 
@@ -50,7 +49,6 @@ skip_reason = "Ollama dependency is not installed"
 # Test initialization and configuration
 @pytest.mark.skipif(skip, reason=skip_reason)
 def test_initialization():
-
     # Creation works without an api_key
     OllamaClient()
 

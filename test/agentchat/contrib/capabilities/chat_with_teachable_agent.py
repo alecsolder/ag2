@@ -14,7 +14,7 @@ from autogen.agentchat.contrib.capabilities.teachability import Teachability
 from autogen.formatting_utils import colored
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST  # noqa: E402
+from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
 
 # Specify the model to use. GPT-3.5 is less reliable than GPT-4 at learning from user input.
 filter_dict = {"model": ["gpt-4o-mini"]}
@@ -50,7 +50,6 @@ def create_teachable_agent(reset_db=False):
 
 def interact_freely_with_user():
     """Starts a free-form chat between the user and a teachable agent."""
-
     # Create the agents.
     print(colored("\nLoading previous memory (if any) from disk.", "light_cyan"))
     teachable_agent = create_teachable_agent(reset_db=False)

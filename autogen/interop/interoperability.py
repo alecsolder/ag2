@@ -11,8 +11,7 @@ __all__ = ["Interoperable"]
 
 
 class Interoperability:
-    """
-    A class to handle interoperability between different tool types.
+    """A class to handle interoperability between different tool types.
 
     This class allows the conversion of tools to various interoperability classes and provides functionality
     for retrieving and registering interoperability classes.
@@ -22,36 +21,42 @@ class Interoperability:
 
     @classmethod
     def convert_tool(cls, *, tool: Any, type: str, **kwargs: Any) -> Tool:
-        """
-        Converts a given tool to an instance of a specified interoperability type.
+        """Converts a given tool to an instance of a specified interoperability type.
 
         Args:
+        ----
             tool (Any): The tool object to be converted.
             type (str): The type of interoperability to convert the tool to.
             **kwargs (Any): Additional arguments to be passed during conversion.
 
         Returns:
+        -------
             Tool: The converted tool.
 
         Raises:
+        ------
             ValueError: If the interoperability class for the provided type is not found.
+
         """
         interop = cls.get_interoperability_class(type)
         return interop.convert_tool(tool, **kwargs)
 
     @classmethod
     def get_interoperability_class(cls, type: str) -> type[Interoperable]:
-        """
-        Retrieves the interoperability class corresponding to the specified type.
+        """Retrieves the interoperability class corresponding to the specified type.
 
         Args:
+        ----
             type (str): The type of the interoperability class to retrieve.
 
         Returns:
+        -------
             Type[Interoperable]: The interoperability class type.
 
         Raises:
+        ------
             ValueError: If no interoperability class is found for the provided type.
+
         """
         supported_types = cls.registry.get_supported_types()
         if type not in supported_types:
@@ -64,10 +69,11 @@ class Interoperability:
 
     @classmethod
     def get_supported_types(cls) -> list[str]:
-        """
-        Returns a sorted list of all supported interoperability types.
+        """Returns a sorted list of all supported interoperability types.
 
-        Returns:
+        Returns
+        -------
             List[str]: A sorted list of strings representing the supported interoperability types.
+
         """
         return sorted(cls.registry.get_supported_types())

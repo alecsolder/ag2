@@ -21,10 +21,12 @@ class OutputStream(Protocol):
         """Print data to the output stream.
 
         Args:
+        ----
             objects (any): The data to print.
             sep (str, optional): The separator between objects. Defaults to " ".
             end (str, optional): The end of the output. Defaults to "\n".
             flush (bool, optional): Whether to flush the output. Defaults to False.
+
         """
         ...  # pragma: no cover
 
@@ -35,10 +37,12 @@ class InputStream(Protocol):
         """Read a line from the input stream.
 
         Args:
+        ----
             prompt (str, optional): The prompt to display. Defaults to "".
             password (bool, optional): Whether to read a password. Defaults to False.
 
         Returns:
+        -------
             str: The line read from the input stream.
 
         """
@@ -59,7 +63,9 @@ class IOStream(InputStream, OutputStream, Protocol):
         """Set the default input/output stream.
 
         Args:
+        ----
             stream (IOStream): The input/output stream to set as the default.
+
         """
         IOStream._global_default = stream
 
@@ -67,8 +73,10 @@ class IOStream(InputStream, OutputStream, Protocol):
     def get_global_default() -> "IOStream":
         """Get the default input/output stream.
 
-        Returns:
+        Returns
+        -------
             IOStream: The default input/output stream.
+
         """
         if IOStream._global_default is None:
             raise RuntimeError("No global default IOStream has been set")
@@ -78,8 +86,10 @@ class IOStream(InputStream, OutputStream, Protocol):
     def get_default() -> "IOStream":
         """Get the default input/output stream.
 
-        Returns:
+        Returns
+        -------
             IOStream: The default input/output stream.
+
         """
         iostream = IOStream._default_io_stream.get()
         if iostream is None:
@@ -94,7 +104,9 @@ class IOStream(InputStream, OutputStream, Protocol):
         """Set the default input/output stream.
 
         Args:
+        ----
             stream (IOStream): The input/output stream to set as the default.
+
         """
         global _default_io_stream
         try:

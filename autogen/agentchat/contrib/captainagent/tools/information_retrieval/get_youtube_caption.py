@@ -5,17 +5,20 @@
 
 
 def get_youtube_caption(videoId):
-    """
-    Retrieves the captions for a YouTube video.
+    """Retrieves the captions for a YouTube video.
 
     Args:
+    ----
         videoId (str): The ID of the YouTube video.
 
     Returns:
+    -------
         str: The captions of the YouTube video in text format.
 
     Raises:
+    ------
         KeyError: If the RAPID_API_KEY environment variable is not set.
+
     """
     import os
 

@@ -52,11 +52,13 @@ class RealtimeAgent(ConversableAgent):
         """(Experimental) Agent for interacting with the Realtime Clients.
 
         Args:
+        ----
             name (str): The name of the agent.
             audio_adapter (RealtimeObserver): The audio adapter for the agent.
             system_message (str): The system message for the agent.
             llm_config (dict[str, Any], bool): The config for the agent.
             voice (str): The voice for the agent.
+
         """
         super().__init__(
             name=name,
@@ -111,7 +113,9 @@ class RealtimeAgent(ConversableAgent):
         """Register an observer with the Realtime Agent.
 
         Args:
+        ----
             observer (RealtimeObserver): The observer to register.
+
         """
         self._observers.append(observer)
 
@@ -125,9 +129,11 @@ class RealtimeAgent(ConversableAgent):
         """Register a swarm of agents with the Realtime Agent.
 
         Args:
+        ----
             initial_agent (SwarmAgent): The initial agent.
             agents (list[SwarmAgent]): The agents in the swarm.
             system_message (str): The system message for the agent.
+
         """
         logger = self.logger
         if not system_message:
@@ -151,10 +157,8 @@ class RealtimeAgent(ConversableAgent):
         """Run the agent."""
         # everything is run in the same task group to enable easy cancellation using self._tg.cancel_scope.cancel()
         async with create_task_group() as self._tg:
-
             # connect with the client first (establishes a connection and initializes a session)
             async with self._realtime_client.connect():
-
                 # start the observers
                 for observer in self._observers:
                     self._tg.soonify(observer.run)(self)
@@ -178,15 +182,19 @@ class RealtimeAgent(ConversableAgent):
             """Decorator for registering a function to be used by an agent.
 
             Args:
+            ----
                 func (callable[..., Any]): the function to be registered.
                 name (str): the name of the function.
 
             Returns:
+            -------
                 The function to be registered, with the _description attribute set to the function description.
 
             Raises:
+            ------
                 ValueError: if the function description is not provided and not propagated by a previous decorator.
                 RuntimeError: if the LLM config is not set up before registering a function.
+
             """
             # get JSON schema for the function
             name = name or func.__name__
@@ -216,15 +224,15 @@ class RealtimeAgent(ConversableAgent):
         return self._answer
 
     async def ask_question(self, question: str, question_timeout: int) -> None:
-        """
-        Send a question for the user to the agent and wait for the answer.
+        """Send a question for the user to the agent and wait for the answer.
         If the answer is not received within the timeout, the question is repeated.
 
         Args:
+        ----
             question: The question to ask the user.
             question_timeout: The time in seconds to wait for the answer.
-        """
 
+        """
         self.reset_answer()
         await self._realtime_client.send_text(role=QUESTION_ROLE, text=question)
 
@@ -249,14 +257,15 @@ class RealtimeAgent(ConversableAgent):
         Called when its agents turn in the chat conversation.
 
         Args:
+        ----
             messages: list of dict
                 the messages in the conversation
             sender: Agent
                 the agent sending the message
             config: any
                 the config for the agent
-        """
 
+        """
         if not messages:
             return False, None
 

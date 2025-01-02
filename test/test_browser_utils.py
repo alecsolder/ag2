@@ -14,7 +14,7 @@ import sys
 
 import pytest
 import requests
-from agentchat.test_assistant_agent import KEY_LOC  # noqa: E402
+from agentchat.test_assistant_agent import KEY_LOC
 
 BLOG_POST_URL = "https://docs.ag2.ai/blog/2023-04-21-LLM-tuning-math"
 BLOG_POST_TITLE = "Does Model and Inference Parameter Matter in LLM Applications? - A Case Study for MATH - AG2"
@@ -171,7 +171,7 @@ def test_bing_search():
     )
 
     assert BING_STRING in browser.visit_page("bing: " + BING_QUERY)
-    assert BING_TITLE == browser.page_title
+    assert browser.page_title == BING_TITLE
     assert len(browser.viewport_pages) == 1
     assert browser.viewport_pages[0] == (0, len(browser.page_content))
 

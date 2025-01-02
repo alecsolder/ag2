@@ -24,9 +24,9 @@ logger = logging.getLogger(__name__)
 
 def _config_check(config: dict):
     # check config loading
-    assert config.get("coding", None) is not None, 'Missing "coding" in your config.'
-    assert config.get("default_llm_config", None) is not None, 'Missing "default_llm_config" in your config.'
-    assert config.get("code_execution_config", None) is not None, 'Missing "code_execution_config" in your config.'
+    assert config.get("coding") is not None, 'Missing "coding" in your config.'
+    assert config.get("default_llm_config") is not None, 'Missing "default_llm_config" in your config.'
+    assert config.get("code_execution_config") is not None, 'Missing "code_execution_config" in your config.'
 
     for agent_config in config["agent_configs"]:
         assert agent_config.get("name", None) is not None, 'Missing agent "name" in your agent_configs.'
@@ -47,8 +47,7 @@ def _retrieve_json(text):
 
 
 class AgentBuilder:
-    """
-    AgentBuilder can help user build an automatic task solving process powered by multi-agent system.
+    """AgentBuilder can help user build an automatic task solving process powered by multi-agent system.
     Specifically, our building pipeline includes initialize and build.
     """
 
@@ -189,14 +188,16 @@ Match roles in the role set to each expert in expert set.
         agent_model_tags: Optional[list] = [],
         max_agents: Optional[int] = 5,
     ):
-        """
-        (These APIs are experimental and may change in the future.)
+        """(These APIs are experimental and may change in the future.)
+
         Args:
+        ----
             config_file_or_env: path or environment of the OpenAI api configs.
             builder_model: specify a model as the backbone of build manager.
             agent_model: specify a model as the backbone of participant agents.
             endpoint_building_timeout: timeout for building up an endpoint server.
             max_agents: max agents for each task.
+
         """
         builder_model = builder_model if isinstance(builder_model, list) else [builder_model]
         builder_filter_dict = {}
@@ -241,13 +242,13 @@ Match roles in the role set to each expert in expert set.
         llm_config: dict,
         use_oai_assistant: Optional[bool] = False,
     ) -> autogen.AssistantAgent:
-        """
-        Create a group chat participant agent.
+        """Create a group chat participant agent.
 
         If the agent rely on an open-source model, this function will automatically set up an endpoint for that agent.
         The API address of that endpoint will be "localhost:{free port}".
 
         Args:
+        ----
             agent_config: agent's config. It should include the following information:
                 1. model_name: backbone model of an agent, e.g., gpt-4-1106-preview, meta/Llama-2-70b-chat
                 2. agent_name: use to identify an agent in the group chat.
@@ -258,7 +259,9 @@ Match roles in the role set to each expert in expert set.
             world_size: the max size of parallel tensors (in most of the cases, this is identical to the amount of GPUs).
 
         Returns:
+        -------
             agent: a set-up agent.
+
         """
         model_name_or_hf_repo = agent_config.get("model", [])
         model_name_or_hf_repo = (
@@ -270,7 +273,7 @@ Match roles in the role set to each expert in expert set.
         description = agent_config["description"]
 
         # Path to the customize **ConversableAgent** class.
-        agent_path = agent_config.get("agent_path", None)
+        agent_path = agent_config.get("agent_path")
         filter_dict = {}
         if len(model_name_or_hf_repo) > 0:
             filter_dict.update({"model": model_name_or_hf_repo})
@@ -334,13 +337,14 @@ Match roles in the role set to each expert in expert set.
         return agent
 
     def clear_agent(self, agent_name: str, recycle_endpoint: Optional[bool] = True):
-        """
-        Clear a specific agent by name.
+        """Clear a specific agent by name.
 
         Args:
+        ----
             agent_name: the name of agent.
             recycle_endpoint: trigger for recycle the endpoint server. If true, the endpoint will be recycled
                 when there is no agent depending on.
+
         """
         _, server_id = self.agent_procs_assign[agent_name]
         del self.agent_procs_assign[agent_name]
@@ -356,9 +360,7 @@ Match roles in the role set to each expert in expert set.
         print(colored(f"Agent {agent_name} has been cleared.", "yellow"), flush=True)
 
     def clear_all_agents(self, recycle_endpoint: Optional[bool] = True):
-        """
-        Clear all cached agents.
-        """
+        """Clear all cached agents."""
         for agent_name in [agent_name for agent_name in self.agent_procs_assign.keys()]:
             self.clear_agent(agent_name, recycle_endpoint)
         print(colored("All agents have been cleared.", "yellow"), flush=True)
@@ -374,10 +376,10 @@ Match roles in the role set to each expert in expert set.
         max_agents: Optional[int] = None,
         **kwargs,
     ) -> tuple[list[autogen.ConversableAgent], dict]:
-        """
-        Auto build agents based on the building task.
+        """Auto build agents based on the building task.
 
         Args:
+        ----
             building_task: instruction that helps build manager (gpt-4) to decide what agent should be built.
             coding: use to identify if the user proxy (a code interpreter) should be added.
             code_execution_config: specific configs for user proxy (e.g., last_n_messages, work_dir, ...).
@@ -386,8 +388,10 @@ Match roles in the role set to each expert in expert set.
             user_proxy: user proxy's class that can be used to replace the default user proxy.
 
         Returns:
+        -------
             agent_list: a list of agents.
             cached_configs: cached configs.
+
         """
         if code_execution_config is None:
             code_execution_config = {
@@ -505,12 +509,12 @@ Match roles in the role set to each expert in expert set.
         user_proxy: Optional[autogen.ConversableAgent] = None,
         **kwargs,
     ) -> tuple[list[autogen.ConversableAgent], dict]:
-        """
-        Build agents from a library.
+        """Build agents from a library.
         The library is a list of agent configs, which contains the name and system_message for each agent.
         We use a build manager to decide what agent in that library should be involved to the task.
 
         Args:
+        ----
             building_task: instruction that helps build manager (gpt-4) to decide what agent should be built.
             library_path_or_json: path or JSON string config of agent library.
             default_llm_config: specific configs for LLM (e.g., config_list, seed, temperature, ...).
@@ -522,8 +526,10 @@ Match roles in the role set to each expert in expert set.
             user_proxy: user proxy's class that can be used to replace the default user proxy.
 
         Returns:
+        -------
             agent_list: a list of agents.
             cached_configs: cached configs.
+
         """
         import sqlite3
 
@@ -664,16 +670,18 @@ Match roles in the role set to each expert in expert set.
     def _build_agents(
         self, use_oai_assistant: Optional[bool] = False, user_proxy: Optional[autogen.ConversableAgent] = None, **kwargs
     ) -> tuple[list[autogen.ConversableAgent], dict]:
-        """
-        Build agents with generated configs.
+        """Build agents with generated configs.
 
         Args:
+        ----
             use_oai_assistant: use OpenAI assistant api instead of self-constructed agent.
             user_proxy: user proxy's class that can be used to replace the default user proxy.
 
         Returns:
+        -------
             agent_list: a list of agents.
             cached_configs: cached configs.
+
         """
         agent_configs = self.cached_configs["agent_configs"]
         default_llm_config = self.cached_configs["default_llm_config"]
@@ -707,15 +715,17 @@ Match roles in the role set to each expert in expert set.
         return agent_list, self.cached_configs.copy()
 
     def save(self, filepath: Optional[str] = None) -> str:
-        """
-        Save building configs. If the filepath is not specific, this function will create a filename by encrypt the
+        """Save building configs. If the filepath is not specific, this function will create a filename by encrypt the
         building_task string by md5 with "save_config_" prefix, and save config to the local path.
 
         Args:
+        ----
             filepath: save path.
 
         Return:
+        ------
             filepath: path save.
+
         """
         if filepath is None:
             filepath = f'./save_config_{hashlib.md5(self.building_task.encode("utf-8")).hexdigest()}.json'
@@ -732,17 +742,19 @@ Match roles in the role set to each expert in expert set.
         use_oai_assistant: Optional[bool] = False,
         **kwargs,
     ) -> tuple[list[autogen.ConversableAgent], dict]:
-        """
-        Load building configs and call the build function to complete building without calling online LLMs' api.
+        """Load building configs and call the build function to complete building without calling online LLMs' api.
 
         Args:
+        ----
             filepath: filepath or JSON string for the save config.
             config_json: JSON string for the save config.
             use_oai_assistant: use OpenAI assistant api instead of self-constructed agent.
 
         Returns:
+        -------
             agent_list: a list of agents.
             cached_configs: cached configs.
+
         """
         # load json string.
         if config_json is not None:
@@ -761,7 +773,7 @@ Match roles in the role set to each expert in expert set.
         default_llm_config = cached_configs["default_llm_config"]
         coding = cached_configs["coding"]
 
-        if kwargs.get("code_execution_config", None) is not None:
+        if kwargs.get("code_execution_config") is not None:
             # for test
             self.cached_configs.update(
                 {

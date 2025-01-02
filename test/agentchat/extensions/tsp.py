@@ -20,15 +20,18 @@ def solve_tsp(dists: dict) -> float:
     """Solve the TSP problem
 
     Args:
+    ----
         dists (dict): the distance matrix between each nodes. Each item in the
             dict is a pair (node A, node B) to the distance from A to B.
 
     Returns:
+    -------
         float: the optimal cost
+
     """
     # Get the unique nodes from the distance matrix
     nodes = set()
-    for pair in dists.keys():
+    for pair in dists:
         nodes.add(pair[0])
         nodes.add(pair[1])
 
@@ -61,11 +64,14 @@ def tsp_data(n: int, seed: int = 2022) -> dict:
     """Generate some sample data for the non-symmetric TSP problem.
 
     Args:
+    ----
         n (int): number of nodes in the problem
         seed (int): the random seed.
 
     Returns:
+    -------
         dict: the pairwise distance matrix.
+
     """
     # Initialize the random seed
     random.seed(seed)

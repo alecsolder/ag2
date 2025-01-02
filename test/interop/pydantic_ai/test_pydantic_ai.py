@@ -75,7 +75,6 @@ class TestPydanticAIInteroperabilityWithotContext:
     sys.version_info < (3, 9), reason="Only Python 3.9 and above are supported for LangchainInteroperability"
 )
 class TestPydanticAIInteroperabilityDependencyInjection:
-
     def test_dependency_injection(self) -> None:
         def f(
             ctx: RunContext[int],  # type: ignore[valid-type]
@@ -147,7 +146,9 @@ class TestPydanticAIInteroperabilityWithContext:
             """Get the player's name.
 
             Args:
+            ----
                 additional_info: Additional information which can be used.
+
             """
             return f"Name: {ctx.deps.name}, Age: {ctx.deps.age}, Additional info: {additional_info}"  # type: ignore[attr-defined]
 

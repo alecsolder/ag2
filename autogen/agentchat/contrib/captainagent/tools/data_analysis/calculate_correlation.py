@@ -2,10 +2,10 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 def calculate_correlation(csv_path: str, column1: str, column2: str, method: str = "pearson") -> float:
-    """
-    Calculate the correlation between two columns in a CSV file.
+    """Calculate the correlation between two columns in a CSV file.
 
     Args:
+    ----
     csv_path (str): The path to the CSV file.
     column1 (str): The name of the first column.
     column2 (str): The name of the second column.
@@ -16,7 +16,9 @@ def calculate_correlation(csv_path: str, column1: str, column2: str, method: str
         - callable: A custom correlation function that takes two arrays and returns a scalar.
 
     Returns:
+    -------
     float: The correlation coefficient between the two columns.
+
     """
     import pandas as pd
 

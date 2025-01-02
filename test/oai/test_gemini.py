@@ -1,4 +1,4 @@
-# Copyright (c) 2023 - 2024, Owners of https://github.com/autogenhub
+# Copyright (c) 2023 - 2024, Owners of https://github.com/ag2ai
 #
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -32,7 +32,7 @@ except ImportError:
 
 
 # Fixtures for mock data
-@pytest.fixture
+@pytest.fixture()
 def mock_response():
     class MockResponse:
         def __init__(self, text, choices, usage, cost, model):
@@ -45,7 +45,7 @@ def mock_response():
     return MockResponse
 
 
-@pytest.fixture
+@pytest.fixture()
 def gemini_client():
     system_message = [
         "You are a helpful AI assistant.",
@@ -53,7 +53,7 @@ def gemini_client():
     return GeminiClient(api_key="fake_api_key", system_message=system_message)
 
 
-@pytest.fixture
+@pytest.fixture()
 def gemini_google_auth_default_client():
     system_message = [
         "You are a helpful AI assistant.",
@@ -61,7 +61,7 @@ def gemini_google_auth_default_client():
     return GeminiClient(system_message=system_message)
 
 
-@pytest.fixture
+@pytest.fixture()
 def gemini_client_with_credentials():
     mock_credentials = MagicMock(Credentials)
     return GeminiClient(credentials=mock_credentials)
@@ -204,9 +204,7 @@ def test_vertexai_default_safety_settings_dict(gemini_client):
     }
     converted_safety_settings = GeminiClient._to_vertexai_safety_settings(safety_settings)
 
-    expected_safety_settings = {
-        category: VertexAIHarmBlockThreshold.BLOCK_ONLY_HIGH for category in safety_settings.keys()
-    }
+    expected_safety_settings = {category: VertexAIHarmBlockThreshold.BLOCK_ONLY_HIGH for category in safety_settings}
 
     def compare_safety_settings(converted_safety_settings, expected_safety_settings):
         for expected_setting_key in expected_safety_settings.keys():

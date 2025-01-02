@@ -34,13 +34,13 @@ class MultimodalConversableAgent(ConversableAgent):
         *args,
         **kwargs,
     ):
-        """
-        Args:
-            name (str): agent name.
-            system_message (str): system message for the OpenAIWrapper inference.
-                Please override this attribute if you want to reprogram the agent.
-            **kwargs (dict): Please refer to other kwargs in
-                [ConversableAgent](../conversable_agent#init).
+        """Args:
+        name (str): agent name.
+        system_message (str): system message for the OpenAIWrapper inference.
+            Please override this attribute if you want to reprogram the agent.
+        **kwargs (dict): Please refer to other kwargs in
+            [ConversableAgent](../conversable_agent#init).
+
         """
         super().__init__(
             name,
@@ -68,7 +68,9 @@ class MultimodalConversableAgent(ConversableAgent):
         """Update the system message.
 
         Args:
+        ----
             system_message (str): system message for the OpenAIWrapper inference.
+
         """
         self._oai_system_message[0]["content"] = self._message_to_dict(system_message)["content"]
         self._oai_system_message[0]["role"] = "system"

@@ -38,13 +38,17 @@ class ImageGenerator(Protocol):
         """Generates an image based on the provided prompt.
 
         Args:
+        ----
           prompt: A string describing the desired image.
 
         Returns:
+        -------
           A PIL Image object representing the generated image.
 
         Raises:
+        ------
           ValueError: If the image generation fails.
+
         """
         ...
 
@@ -54,10 +58,13 @@ class ImageGenerator(Protocol):
         This key can be used to store and retrieve generated images based on the prompt.
 
         Args:
+        ----
           prompt: A string describing the desired image.
 
         Returns:
+        -------
           A unique string that can be used as a cache key.
+
         """
         ...
 
@@ -78,12 +85,12 @@ class DalleImageGenerator:
         quality: Literal["standard", "hd"] = "standard",
         num_images: int = 1,
     ):
-        """
-        Args:
-            llm_config (dict): llm config, must contain a valid dalle model and OpenAI API key in config_list.
-            resolution (str): The resolution of the image you want to generate. Must be one of "256x256", "512x512", "1024x1024", "1792x1024", "1024x1792".
-            quality (str): The quality of the image you want to generate. Must be one of "standard", "hd".
-            num_images (int): The number of images to generate.
+        """Args:
+        llm_config (dict): llm config, must contain a valid dalle model and OpenAI API key in config_list.
+        resolution (str): The resolution of the image you want to generate. Must be one of "256x256", "512x512", "1024x1024", "1792x1024", "1024x1792".
+        quality (str): The quality of the image you want to generate. Must be one of "standard", "hd".
+        num_images (int): The number of images to generate.
+
         """
         config_list = llm_config["config_list"]
         _validate_dalle_model(config_list[0]["model"])
@@ -127,6 +134,7 @@ class ImageGeneration(AgentCapability):
         message received by the agent.
 
     Example:
+    -------
         ```python
         import autogen
         from autogen.agentchat.contrib.capabilities.image_generation import ImageGeneration
@@ -143,6 +151,7 @@ class ImageGeneration(AgentCapability):
         # Add the ImageGeneration capability to the agent
         agent.add_capability(ImageGeneration(image_generator=dalle_gen))
         ```
+
     """
 
     def __init__(
@@ -154,23 +163,23 @@ class ImageGeneration(AgentCapability):
         verbosity: int = 0,
         register_reply_position: int = 2,
     ):
-        """
-        Args:
-            image_generator (ImageGenerator): The image generator you would like to use to generate images.
-            cache (None or AbstractCache): The cache client to use to store and retrieve generated images. If None,
-                no caching will be used.
-            text_analyzer_llm_config (Dict or None): The LLM config for the text analyzer. If None, the LLM config will
-                be retrieved from the agent you're adding the ability to.
-            text_analyzer_instructions (str): Instructions provided to the TextAnalyzerAgent used to analyze
-                incoming messages and extract the prompt for image generation. The default instructions focus on
-                summarizing the prompt. You can customize the instructions to achieve more granular control over prompt
-                extraction.
-                Example: 'Extract specific details from the message, like desired objects, styles, or backgrounds.'
-            verbosity (int): The verbosity level. Defaults to 0 and must be greater than or equal to 0. The text
-                analyzer llm calls will be silent if verbosity is less than 2.
-            register_reply_position (int): The position of the reply function in the agent's list of reply functions.
-                This capability registers a new reply function to handle messages with image generation requests.
-                Defaults to 2 to place it after the check termination and human reply for a ConversableAgent.
+        """Args:
+        image_generator (ImageGenerator): The image generator you would like to use to generate images.
+        cache (None or AbstractCache): The cache client to use to store and retrieve generated images. If None,
+            no caching will be used.
+        text_analyzer_llm_config (Dict or None): The LLM config for the text analyzer. If None, the LLM config will
+            be retrieved from the agent you're adding the ability to.
+        text_analyzer_instructions (str): Instructions provided to the TextAnalyzerAgent used to analyze
+            incoming messages and extract the prompt for image generation. The default instructions focus on
+            summarizing the prompt. You can customize the instructions to achieve more granular control over prompt
+            extraction.
+            Example: 'Extract specific details from the message, like desired objects, styles, or backgrounds.'
+        verbosity (int): The verbosity level. Defaults to 0 and must be greater than or equal to 0. The text
+            analyzer llm calls will be silent if verbosity is less than 2.
+        register_reply_position (int): The position of the reply function in the agent's list of reply functions.
+            This capability registers a new reply function to handle messages with image generation requests.
+            Defaults to 2 to place it after the check termination and human reply for a ConversableAgent.
+
         """
         self._image_generator = image_generator
         self._cache = cache
@@ -197,7 +206,9 @@ class ImageGeneration(AgentCapability):
            capability. This might be helpful in certain use cases, like group chats.
 
         Args:
+        ----
           agent (ConversableAgent): The ConversableAgent to add the capability to.
+
         """
         self._agent = agent
 

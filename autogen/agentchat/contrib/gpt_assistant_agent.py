@@ -21,8 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 class GPTAssistantAgent(ConversableAgent):
-    """
-    An experimental AutoGen agent class that leverages the OpenAI Assistant API for conversational capabilities.
+    """An experimental AutoGen agent class that leverages the OpenAI Assistant API for conversational capabilities.
     This agent is unique in its reliance on the OpenAI Assistant for state management, differing from other agents like ConversableAgent.
     """
 
@@ -38,32 +37,31 @@ class GPTAssistantAgent(ConversableAgent):
         overwrite_tools: bool = False,
         **kwargs,
     ):
-        """
-        Args:
-            name (str): name of the agent. It will be used to find the existing assistant by name. Please remember to delete an old assistant with the same name if you intend to create a new assistant with the same name.
-            instructions (str): instructions for the OpenAI assistant configuration.
-            When instructions is not None, the system message of the agent will be
-            set to the provided instructions and used in the assistant run, irrespective
-            of the overwrite_instructions flag. But when instructions is None,
-            and the assistant does not exist, the system message will be set to
-            AssistantAgent.DEFAULT_SYSTEM_MESSAGE. If the assistant exists, the
-            system message will be set to the existing assistant instructions.
-            llm_config (dict or False): llm inference configuration.
-                - model: Model to use for the assistant (gpt-4-1106-preview, gpt-3.5-turbo-1106).
-            assistant_config
-                - assistant_id: ID of the assistant to use. If None, a new assistant will be created.
-                - check_every_ms: check thread run status interval
-                - tools: Give Assistants access to OpenAI-hosted tools like Code Interpreter and Knowledge Retrieval,
-                        or build your own tools using Function calling. ref https://platform.openai.com/docs/assistants/tools
-                - file_ids: (Deprecated) files used by retrieval in run. It is Deprecated, use tool_resources instead. https://platform.openai.com/docs/assistants/migration/what-has-changed.
-                - tool_resources: A set of resources that are used by the assistant's tools. The resources are specific to the type of tool.
-            overwrite_instructions (bool): whether to overwrite the instructions of an existing assistant. This parameter is in effect only when assistant_id is specified in llm_config.
-            overwrite_tools (bool): whether to overwrite the tools of an existing assistant. This parameter is in effect only when assistant_id is specified in llm_config.
-            kwargs (dict): Additional configuration options for the agent.
-                - verbose (bool): If set to True, enables more detailed output from the assistant thread.
-                - Other kwargs: Except verbose, others are passed directly to ConversableAgent.
-        """
+        """Args:
+        name (str): name of the agent. It will be used to find the existing assistant by name. Please remember to delete an old assistant with the same name if you intend to create a new assistant with the same name.
+        instructions (str): instructions for the OpenAI assistant configuration.
+        When instructions is not None, the system message of the agent will be
+        set to the provided instructions and used in the assistant run, irrespective
+        of the overwrite_instructions flag. But when instructions is None,
+        and the assistant does not exist, the system message will be set to
+        AssistantAgent.DEFAULT_SYSTEM_MESSAGE. If the assistant exists, the
+        system message will be set to the existing assistant instructions.
+        llm_config (dict or False): llm inference configuration.
+            - model: Model to use for the assistant (gpt-4-1106-preview, gpt-3.5-turbo-1106).
+        assistant_config
+            - assistant_id: ID of the assistant to use. If None, a new assistant will be created.
+            - check_every_ms: check thread run status interval
+            - tools: Give Assistants access to OpenAI-hosted tools like Code Interpreter and Knowledge Retrieval,
+                    or build your own tools using Function calling. ref https://platform.openai.com/docs/assistants/tools
+            - file_ids: (Deprecated) files used by retrieval in run. It is Deprecated, use tool_resources instead. https://platform.openai.com/docs/assistants/migration/what-has-changed.
+            - tool_resources: A set of resources that are used by the assistant's tools. The resources are specific to the type of tool.
+        overwrite_instructions (bool): whether to overwrite the instructions of an existing assistant. This parameter is in effect only when assistant_id is specified in llm_config.
+        overwrite_tools (bool): whether to overwrite the tools of an existing assistant. This parameter is in effect only when assistant_id is specified in llm_config.
+        kwargs (dict): Additional configuration options for the agent.
+            - verbose (bool): If set to True, enables more detailed output from the assistant thread.
+            - Other kwargs: Except verbose, others are passed directly to ConversableAgent.
 
+        """
         self._verbose = kwargs.pop("verbose", False)
         openai_client_cfg, openai_assistant_cfg = self._process_assistant_config(llm_config, assistant_config)
 
@@ -188,18 +186,19 @@ class GPTAssistantAgent(ConversableAgent):
         sender: Optional[Agent] = None,
         config: Optional[Any] = None,
     ) -> tuple[bool, Union[str, dict, None]]:
-        """
-        Invokes the OpenAI assistant to generate a reply based on the given messages.
+        """Invokes the OpenAI assistant to generate a reply based on the given messages.
 
         Args:
+        ----
             messages: A list of messages in the conversation history with the sender.
             sender: The agent instance that sent the message.
             config: Optional configuration for message processing.
 
         Returns:
+        -------
             A tuple containing a boolean indicating success and the assistant's reply.
-        """
 
+        """
         if messages is None:
             messages = self._oai_messages[sender]
         unread_index = self._unread_index[sender] or 0
@@ -249,14 +248,16 @@ class GPTAssistantAgent(ConversableAgent):
         return True, response
 
     def _map_role_for_api(self, role: str) -> str:
-        """
-        Maps internal message roles to the roles expected by the OpenAI Assistant API.
+        """Maps internal message roles to the roles expected by the OpenAI Assistant API.
 
         Args:
+        ----
             role (str): The role from the internal message.
 
         Returns:
+        -------
             str: The mapped role suitable for the API.
+
         """
         if role in ["function", "tool"]:
             return "assistant"
@@ -271,14 +272,16 @@ class GPTAssistantAgent(ConversableAgent):
             return "assistant"
 
     def _get_run_response(self, thread, run):
-        """
-        Waits for and processes the response of a run from the OpenAI assistant.
+        """Waits for and processes the response of a run from the OpenAI assistant.
 
         Args:
+        ----
             run: The run object initiated with the OpenAI assistant.
 
         Returns:
+        -------
             Updated run object, status of the run, and response messages.
+
         """
         while True:
             run = self._wait_for_run(run.id, thread.id)
@@ -335,15 +338,17 @@ class GPTAssistantAgent(ConversableAgent):
                 raise ValueError(f"Unexpected run status: {run.status}. Full run info:\n\n{run_info})")
 
     def _wait_for_run(self, run_id: str, thread_id: str) -> Any:
-        """
-        Waits for a run to complete or reach a final state.
+        """Waits for a run to complete or reach a final state.
 
         Args:
+        ----
             run_id: The ID of the run.
             thread_id: The ID of the thread associated with the run.
 
         Returns:
+        -------
             The updated run object after completion or reaching a final state.
+
         """
         in_progress = True
         while in_progress:
@@ -354,10 +359,7 @@ class GPTAssistantAgent(ConversableAgent):
         return run
 
     def _format_assistant_message(self, message_content):
-        """
-        Formats the assistant's message to include annotations and citations.
-        """
-
+        """Formats the assistant's message to include annotations and citations."""
         annotations = message_content.annotations
         citations = []
 
@@ -390,9 +392,7 @@ class GPTAssistantAgent(ConversableAgent):
         return False
 
     def reset(self):
-        """
-        Resets the agent, clearing any existing conversation thread and unread message indices.
-        """
+        """Resets the agent, clearing any existing conversation thread and unread message indices."""
         super().reset()
         for thread in self._openai_threads.values():
             # Delete the existing thread to start fresh in the next conversation
@@ -405,7 +405,9 @@ class GPTAssistantAgent(ConversableAgent):
         """Clear the chat history of the agent.
 
         Args:
+        ----
             agent: the agent with whom the chat history to clear. If None, clear the chat history with all agents.
+
         """
         super().clear_history(agent)
         if self._openai_threads.get(agent, None) is not None:
@@ -468,8 +470,7 @@ class GPTAssistantAgent(ConversableAgent):
         self._openai_client.beta.assistants.delete(self.assistant_id)
 
     def find_matching_assistant(self, candidate_assistants, instructions, tools):
-        """
-        Find the matching assistant from a list of candidate assistants.
+        """Find the matching assistant from a list of candidate assistants.
         Filter out candidates with the same name but different instructions, and function names.
         """
         matching_assistants = []
@@ -517,10 +518,7 @@ class GPTAssistantAgent(ConversableAgent):
         return matching_assistants
 
     def _process_assistant_config(self, llm_config, assistant_config):
-        """
-        Process the llm_config and assistant_config to extract the model name and assistant related configurations.
-        """
-
+        """Process the llm_config and assistant_config to extract the model name and assistant related configurations."""
         if llm_config is False:
             raise ValueError("llm_config=False is not supported for GPTAssistantAgent.")
 

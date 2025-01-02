@@ -22,6 +22,7 @@ def text_to_speech(
     """Convert text to voice using OpenAI API.
 
     Args:
+    ----
         text (str): Text to convert to voice.
         openai_api_key (str): OpenAI API key.
         model (str, optional): Model to use for the conversion. Defaults to "tts-1".
@@ -29,7 +30,9 @@ def text_to_speech(
         response_format (Union[Literal["mp3", "opus", "aac", "flac", "wav", "pcm"], NotGiven], optional): Response format. Defaults to "pcm".
 
     Returns:
+    -------
         str: Base64 encoded audio.
+
     """
     tts_client = OpenAI(api_key=openai_api_key)
     response = tts_client.audio.speech.create(model=model, voice=voice, input=text, response_format=response_format)
@@ -48,12 +51,15 @@ def trace(
     If defined, precall_event will be set before the function call and postcall_event will be set after the function call.
 
     Args:
+    ----
         mock (MagicMock): Mock object.
         precall_event (Optional[Event], optional): Event to set before the function call. Defaults to None.
         postcall_event (Optional[Event], optional): Event to set after the function call. Defaults to None.
 
     Returns:
+    -------
         Callable[[F], F]: Function decorator.
+
     """
 
     def decorator(f: F) -> F:

@@ -17,8 +17,7 @@ __all__ = ["PydanticAIInteroperability"]
 
 @register_interoperable_class("pydanticai")
 class PydanticAIInteroperability:
-    """
-    A class implementing the `Interoperable` protocol for converting Pydantic AI tools
+    """A class implementing the `Interoperable` protocol for converting Pydantic AI tools
     into a general `Tool` format.
 
     This class takes a `PydanticAITool` and converts it into a standard `Tool` object,
@@ -32,21 +31,24 @@ class PydanticAIInteroperability:
         ctx: Any,
         tool: Any,
     ) -> Callable[..., Any]:
-        """
-        Wraps the tool's function to inject context parameters and handle retries.
+        """Wraps the tool's function to inject context parameters and handle retries.
 
         This method ensures that context parameters are properly passed to the tool
         when invoked and that retries are managed according to the tool's settings.
 
         Args:
+        ----
             ctx (Optional[RunContext[Any]]): The run context, which may include dependencies and retry information.
             tool (PydanticAITool): The Pydantic AI tool whose function is to be wrapped.
 
         Returns:
+        -------
             Callable[..., Any]: A wrapped function that includes context injection and retry handling.
 
         Raises:
+        ------
             ValueError: If the tool fails after the maximum number of retries.
+
         """
         from pydantic_ai import RunContext
         from pydantic_ai.tools import Tool as PydanticAITool
@@ -88,25 +90,28 @@ class PydanticAIInteroperability:
 
     @classmethod
     def convert_tool(cls, tool: Any, deps: Any = None, **kwargs: Any) -> AG2PydanticAITool:
-        """
-        Converts a given Pydantic AI tool into a general `Tool` format.
+        """Converts a given Pydantic AI tool into a general `Tool` format.
 
         This method verifies that the provided tool is a valid `PydanticAITool`,
         handles context dependencies if necessary, and returns a standardized `Tool` object.
 
         Args:
+        ----
             tool (Any): The tool to convert, expected to be an instance of `PydanticAITool`.
             deps (Any, optional): The dependencies to inject into the context, required if
                                    the tool takes a context. Defaults to None.
             **kwargs (Any): Additional arguments that are not used in this method.
 
         Returns:
+        -------
             AG2PydanticAITool: A standardized `Tool` object converted from the Pydantic AI tool.
 
         Raises:
+        ------
             ValueError: If the provided tool is not an instance of `PydanticAITool`, or if
                         dependencies are missing for tools that require a context.
             UserWarning: If the `deps` argument is provided for a tool that does not take a context.
+
         """
         from pydantic_ai import RunContext
         from pydantic_ai.tools import Tool as PydanticAITool

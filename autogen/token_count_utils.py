@@ -71,23 +71,30 @@ def token_left(input: Union[str, list, dict], model="gpt-3.5-turbo-0613") -> int
     """Count number of tokens left for an OpenAI model.
 
     Args:
+    ----
         input: (str, list, dict): Input to the model.
         model: (str): Model name.
 
     Returns:
+    -------
         int: Number of tokens left that the model can use for completion.
+
     """
     return get_max_token_limit(model) - count_token(input, model=model)
 
 
 def count_token(input: Union[str, list, dict], model: str = "gpt-3.5-turbo-0613") -> int:
     """Count number of tokens used by an OpenAI model.
+
     Args:
+    ----
         input: (str, list, dict): Input to the model.
         model: (str): Model name.
 
     Returns:
+    -------
         int: Number of tokens from the input.
+
     """
     if isinstance(input, str):
         return _num_token_from_text(input, model=model)
@@ -212,11 +219,14 @@ def num_tokens_from_functions(functions, model="gpt-3.5-turbo-0613") -> int:
     """Return the number of tokens used by a list of functions.
 
     Args:
+    ----
         functions: (list): List of function descriptions that will be passed in model.
         model: (str): Model name.
 
     Returns:
+    -------
         int: Number of tokens from the function descriptions.
+
     """
     try:
         encoding = tiktoken.encoding_for_model(model)

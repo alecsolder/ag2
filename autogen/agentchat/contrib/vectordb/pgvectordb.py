@@ -31,10 +31,10 @@ logger = get_logger(__name__)
 
 
 class Collection:
-    """
-    A Collection object for PGVector.
+    """A Collection object for PGVector.
 
-    Attributes:
+    Attributes
+    ----------
         client: The PGVector client.
         collection_name (str): The name of the collection. Default is "documents".
         embedding_function (Callable): The embedding function used to generate the vector representation.
@@ -43,6 +43,7 @@ class Collection:
             https://huggingface.co/models?library=sentence-transformers
         metadata (Optional[dict]): The metadata of the collection.
         get_or_create (Optional): The flag indicating whether to get or create the collection.
+
     """
 
     def __init__(
@@ -53,17 +54,20 @@ class Collection:
         metadata=None,
         get_or_create=None,
     ):
-        """
-        Initialize the Collection object.
+        """Initialize the Collection object.
 
         Args:
+        ----
             client: The PostgreSQL client.
             collection_name: The name of the collection. Default is "documents".
             embedding_function: The embedding function used to generate the vector representation.
             metadata: The metadata of the collection.
             get_or_create: The flag indicating whether to get or create the collection.
+
         Returns:
+        -------
             None
+
         """
         self.client = client
         self.name = self.set_collection_name(collection_name)
@@ -89,17 +93,19 @@ class Collection:
         return self.name
 
     def add(self, ids: list[ItemID], documents: list, embeddings: list = None, metadatas: list = None) -> None:
-        """
-        Add documents to the collection.
+        """Add documents to the collection.
 
         Args:
+        ----
             ids (List[ItemID]): A list of document IDs.
             embeddings (List): A list of document embeddings. Optional
             metadatas (List): A list of document metadatas. Optional
             documents (List): A list of documents.
 
         Returns:
+        -------
             None
+
         """
         cursor = self.client.cursor()
         sql_values = []
@@ -132,17 +138,19 @@ class Collection:
         cursor.close()
 
     def upsert(self, ids: list[ItemID], documents: list, embeddings: list = None, metadatas: list = None) -> None:
-        """
-        Upsert documents into the collection.
+        """Upsert documents into the collection.
 
         Args:
+        ----
             ids (List[ItemID]): A list of document IDs.
             documents (List): A list of documents.
             embeddings (List): A list of document embeddings.
             metadatas (List): A list of document metadatas.
 
         Returns:
+        -------
             None
+
         """
         cursor = self.client.cursor()
         sql_values = []
@@ -191,11 +199,12 @@ class Collection:
         cursor.close()
 
     def count(self) -> int:
-        """
-        Get the total number of documents in the collection.
+        """Get the total number of documents in the collection.
 
-        Returns:
+        Returns
+        -------
             int: The total number of documents.
+
         """
         cursor = self.client.cursor()
         query = f"SELECT COUNT(*) FROM {self.name}"
@@ -209,16 +218,17 @@ class Collection:
         return total
 
     def table_exists(self, table_name: str) -> bool:
-        """
-        Check if a table exists in the PostgreSQL database.
+        """Check if a table exists in the PostgreSQL database.
 
         Args:
+        ----
             table_name (str): The name of the table to check.
 
         Returns:
+        -------
             bool: True if the table exists, False otherwise.
-        """
 
+        """
         cursor = self.client.cursor()
         cursor.execute(
             """
@@ -241,10 +251,10 @@ class Collection:
         limit: Optional[Union[int, str]] = None,
         offset: Optional[Union[int, str]] = None,
     ) -> list[Document]:
-        """
-        Retrieve documents from the collection.
+        """Retrieve documents from the collection.
 
         Args:
+        ----
             ids (Optional[List]): A list of document IDs.
             include (Optional): The fields to include.
             where (Optional): Additional filtering criteria.
@@ -252,7 +262,9 @@ class Collection:
             offset (Optional): The offset for pagination.
 
         Returns:
+        -------
             List: The retrieved documents.
+
         """
         cursor = self.client.cursor()
 
@@ -313,17 +325,19 @@ class Collection:
         return retrieved_documents
 
     def update(self, ids: list, embeddings: list, metadatas: list, documents: list) -> None:
-        """
-        Update documents in the collection.
+        """Update documents in the collection.
 
         Args:
+        ----
             ids (List): A list of document IDs.
             embeddings (List): A list of document embeddings.
             metadatas (List): A list of document metadatas.
             documents (List): A list of documents.
 
         Returns:
+        -------
             None
+
         """
         cursor = self.client.cursor()
         sql_values = []
@@ -342,45 +356,51 @@ class Collection:
 
     @staticmethod
     def euclidean_distance(arr1: list[float], arr2: list[float]) -> float:
-        """
-        Calculate the Euclidean distance between two vectors.
+        """Calculate the Euclidean distance between two vectors.
 
-        Parameters:
+        Parameters
+        ----------
         - arr1 (List[float]): The first vector.
         - arr2 (List[float]): The second vector.
 
-        Returns:
+        Returns
+        -------
         - float: The Euclidean distance between arr1 and arr2.
+
         """
         dist = np.linalg.norm(arr1 - arr2)
         return dist
 
     @staticmethod
     def cosine_distance(arr1: list[float], arr2: list[float]) -> float:
-        """
-        Calculate the cosine distance between two vectors.
+        """Calculate the cosine distance between two vectors.
 
-        Parameters:
+        Parameters
+        ----------
         - arr1 (List[float]): The first vector.
         - arr2 (List[float]): The second vector.
 
-        Returns:
+        Returns
+        -------
         - float: The cosine distance between arr1 and arr2.
+
         """
         dist = np.dot(arr1, arr2) / (np.linalg.norm(arr1) * np.linalg.norm(arr2))
         return dist
 
     @staticmethod
     def inner_product_distance(arr1: list[float], arr2: list[float]) -> float:
-        """
-        Calculate the Euclidean distance between two vectors.
+        """Calculate the Euclidean distance between two vectors.
 
-        Parameters:
+        Parameters
+        ----------
         - arr1 (List[float]): The first vector.
         - arr2 (List[float]): The second vector.
 
-        Returns:
+        Returns
+        -------
         - float: The Euclidean distance between arr1 and arr2.
+
         """
         dist = np.linalg.norm(arr1 - arr2)
         return dist
@@ -394,10 +414,10 @@ class Collection:
         distance_threshold: Optional[float] = -1,
         include_embedding: Optional[bool] = False,
     ) -> QueryResults:
-        """
-        Query documents in the collection.
+        """Query documents in the collection.
 
         Args:
+        ----
             query_texts (List[str]): A list of query texts.
             collection_name (Optional[str]): The name of the collection.
             n_results (int): The maximum number of results to return.
@@ -406,6 +426,7 @@ class Collection:
             include_embedding (Optional[bool]): Include embedding values in QueryResults
         Returns:
             QueryResults: The query results.
+
         """
         if collection_name:
             self.name = collection_name
@@ -433,7 +454,7 @@ class Collection:
             query = (
                 f"SELECT id, documents, embedding, metadatas "
                 f"FROM {self.name} "
-                f"{clause} embedding {index_function} '{str(vector)}' {distance_threshold} "
+                f"{clause} embedding {index_function} '{vector!s}' {distance_threshold} "
                 f"LIMIT {n_results}"
             )
             cursor.execute(query)
@@ -459,15 +480,17 @@ class Collection:
 
     @staticmethod
     def convert_string_to_array(array_string: str) -> list[float]:
-        """
-        Convert a string representation of an array to a list of floats.
+        """Convert a string representation of an array to a list of floats.
 
-        Parameters:
+        Parameters
+        ----------
         - array_string (str): The string representation of the array.
 
-        Returns:
+        Returns
+        -------
         - list: A list of floats parsed from the input string. If the input is
           not a string, it returns the input itself.
+
         """
         if not isinstance(array_string, str):
             return array_string
@@ -476,15 +499,17 @@ class Collection:
         return array
 
     def modify(self, metadata, collection_name: Optional[str] = None) -> None:
-        """
-        Modify metadata for the collection.
+        """Modify metadata for the collection.
 
         Args:
+        ----
             collection_name: The name of the collection.
             metadata: The new metadata.
 
         Returns:
+        -------
             None
+
         """
         if collection_name:
             self.name = collection_name
@@ -495,15 +520,17 @@ class Collection:
         cursor.close()
 
     def delete(self, ids: list[ItemID], collection_name: Optional[str] = None) -> None:
-        """
-        Delete documents from the collection.
+        """Delete documents from the collection.
 
         Args:
+        ----
             ids (List[ItemID]): A list of document IDs to delete.
             collection_name (str): The name of the collection to delete.
 
         Returns:
+        -------
             None
+
         """
         if collection_name:
             self.name = collection_name
@@ -513,14 +540,16 @@ class Collection:
         cursor.close()
 
     def delete_collection(self, collection_name: Optional[str] = None) -> None:
-        """
-        Delete the entire collection.
+        """Delete the entire collection.
 
         Args:
+        ----
             collection_name (Optional[str]): The name of the collection to delete.
 
         Returns:
+        -------
             None
+
         """
         if collection_name:
             self.name = collection_name
@@ -531,15 +560,17 @@ class Collection:
     def create_collection(
         self, collection_name: Optional[str] = None, dimension: Optional[Union[str, int]] = None
     ) -> None:
-        """
-        Create a new collection.
+        """Create a new collection.
 
         Args:
+        ----
             collection_name (Optional[str]): The name of the new collection.
             dimension (Optional[Union[str, int]]): The dimension size of the sentence embedding model
 
         Returns:
+        -------
             None
+
         """
         if collection_name:
             self.name = collection_name
@@ -567,9 +598,7 @@ class Collection:
 
 
 class PGVectorDB(VectorDB):
-    """
-    A vector database that uses PGVector as the backend.
-    """
+    """A vector database that uses PGVector as the backend."""
 
     def __init__(
         self,
@@ -585,12 +614,12 @@ class PGVectorDB(VectorDB):
         embedding_function: Callable = None,
         metadata: Optional[dict] = None,
     ) -> None:
-        """
-        Initialize the vector database.
+        """Initialize the vector database.
 
         Note: connection_string or host + port + dbname must be specified
 
         Args:
+        ----
             conn: psycopg.Connection | A customer connection object to connect to the database.
                 A connection object may include additional key/values:
                 https://www.postgresql.org/docs/current/libpq-connect.html#LIBPQ-CONNSTRING
@@ -611,6 +640,7 @@ class PGVectorDB(VectorDB):
                 For more info: https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw
         Returns:
             None
+
         """
         self.client = self.establish_connection(
             conn=conn,
@@ -641,10 +671,10 @@ class PGVectorDB(VectorDB):
         password: Optional[str] = None,
         connect_timeout: Optional[int] = 10,
     ) -> psycopg.Connection:
-        """
-        Establishes a connection to a PostgreSQL database using psycopg.
+        """Establishes a connection to a PostgreSQL database using psycopg.
 
         Args:
+        ----
             conn: An existing psycopg connection object. If provided, this connection will be used.
             connection_string: A string containing the connection information. If provided, a new connection will be established using this string.
             host: The hostname of the PostgreSQL server. Used if connection_string is not provided.
@@ -655,11 +685,14 @@ class PGVectorDB(VectorDB):
             connect_timeout: Maximum wait for connection, in seconds. The default is 10 seconds.
 
         Returns:
+        -------
             A psycopg.Connection object representing the established connection.
 
         Raises:
+        ------
             PermissionError if no credentials are supplied
             psycopg.Error: If an error occurs while trying to connect to the database.
+
         """
         try:
             if conn:
@@ -711,20 +744,22 @@ class PGVectorDB(VectorDB):
     def create_collection(
         self, collection_name: str, overwrite: bool = False, get_or_create: bool = True
     ) -> Collection:
-        """
-        Create a collection in the vector database.
+        """Create a collection in the vector database.
         Case 1. if the collection does not exist, create the collection.
         Case 2. the collection exists, if overwrite is True, it will overwrite the collection.
         Case 3. the collection exists and overwrite is False, if get_or_create is True, it will get the collection,
             otherwise it raise a ValueError.
 
         Args:
+        ----
             collection_name: str | The name of the collection.
             overwrite: bool | Whether to overwrite the collection if it exists. Default is False.
             get_or_create: bool | Whether to get the collection if it exists. Default is True.
 
         Returns:
+        -------
             Collection | The collection object.
+
         """
         try:
             if self.active_collection and self.active_collection.name == collection_name:
@@ -773,15 +808,17 @@ class PGVectorDB(VectorDB):
             raise ValueError(f"Collection {collection_name} already exists.")
 
     def get_collection(self, collection_name: str = None) -> Collection:
-        """
-        Get the collection from the vector database.
+        """Get the collection from the vector database.
 
         Args:
+        ----
             collection_name: str | The name of the collection. Default is None. If None, return the
                 current active collection.
 
         Returns:
+        -------
             Collection | The collection object.
+
         """
         if collection_name is None:
             if self.active_collection is None:
@@ -800,14 +837,16 @@ class PGVectorDB(VectorDB):
         return self.active_collection
 
     def delete_collection(self, collection_name: str) -> None:
-        """
-        Delete the collection from the vector database.
+        """Delete the collection from the vector database.
 
         Args:
+        ----
             collection_name: str | The name of the collection.
 
         Returns:
+        -------
             None
+
         """
         if self.active_collection:
             self.active_collection.delete_collection(collection_name)
@@ -837,17 +876,19 @@ class PGVectorDB(VectorDB):
                 collection.add(**collection_kwargs)
 
     def insert_docs(self, docs: list[Document], collection_name: str = None, upsert: bool = False) -> None:
-        """
-        Insert documents into the collection of the vector database.
+        """Insert documents into the collection of the vector database.
 
         Args:
+        ----
             docs: List[Document] | A list of documents. Each document is a TypedDict `Document`.
             collection_name: str | The name of the collection. Default is None.
             upsert: bool | Whether to update the document if it exists. Default is False.
             kwargs: Dict | Additional keyword arguments.
 
         Returns:
+        -------
             None
+
         """
         if not docs:
             return
@@ -875,29 +916,33 @@ class PGVectorDB(VectorDB):
         self._batch_insert(collection, embeddings, ids, metadatas, documents, upsert)
 
     def update_docs(self, docs: list[Document], collection_name: str = None) -> None:
-        """
-        Update documents in the collection of the vector database.
+        """Update documents in the collection of the vector database.
 
         Args:
+        ----
             docs: List[Document] | A list of documents.
             collection_name: str | The name of the collection. Default is None.
 
         Returns:
+        -------
             None
+
         """
         self.insert_docs(docs, collection_name, upsert=True)
 
     def delete_docs(self, ids: list[ItemID], collection_name: str = None) -> None:
-        """
-        Delete documents from the collection of the vector database.
+        """Delete documents from the collection of the vector database.
 
         Args:
+        ----
             ids: List[ItemID] | A list of document ids. Each id is a typed `ItemID`.
             collection_name: str | The name of the collection. Default is None.
             kwargs: Dict | Additional keyword arguments.
 
         Returns:
+        -------
             None
+
         """
         collection = self.get_collection(collection_name)
         collection.delete(ids=ids, collection_name=collection_name)
@@ -909,10 +954,10 @@ class PGVectorDB(VectorDB):
         n_results: int = 10,
         distance_threshold: float = -1,
     ) -> QueryResults:
-        """
-        Retrieve documents from the collection of the vector database based on the queries.
+        """Retrieve documents from the collection of the vector database based on the queries.
 
         Args:
+        ----
             queries: List[str] | A list of queries. Each query is a string.
             collection_name: str | The name of the collection. Default is None.
             n_results: int | The number of relevant documents to return. Default is 10.
@@ -921,8 +966,10 @@ class PGVectorDB(VectorDB):
             kwargs: Dict | Additional keyword arguments.
 
         Returns:
+        -------
             QueryResults | The query results. Each query result is a list of list of tuples containing the document and
                 the distance.
+
         """
         collection = self.get_collection(collection_name)
         if isinstance(queries, str):
@@ -938,10 +985,10 @@ class PGVectorDB(VectorDB):
     def get_docs_by_ids(
         self, ids: list[ItemID] = None, collection_name: str = None, include=None, **kwargs
     ) -> list[Document]:
-        """
-        Retrieve documents from the collection of the vector database based on the ids.
+        """Retrieve documents from the collection of the vector database based on the ids.
 
         Args:
+        ----
             ids: List[ItemID] | A list of document ids. If None, will return all the documents. Default is None.
             collection_name: str | The name of the collection. Default is None.
             include: List[str] | The fields to include. Default is None.
@@ -949,7 +996,9 @@ class PGVectorDB(VectorDB):
             kwargs: dict | Additional keyword arguments.
 
         Returns:
+        -------
             List[Document] | The results.
+
         """
         collection = self.get_collection(collection_name)
         include = include if include else ["metadatas", "documents"]

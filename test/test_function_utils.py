@@ -132,7 +132,7 @@ def test_get_missing_annotations() -> None:
     assert unannotated_with_default == {"b"}
 
     def _f2(a: str, b) -> str:  # type: ignore[empty-body,no-untyped-def]
-        "ok"
+        """Ok"""
 
     missing, unannotated_with_default = get_missing_annotations(get_typed_signature(_f2), ["a", "b"])
     assert missing == {"b"}
@@ -378,7 +378,7 @@ def test_load_basemodels_if_needed_sync() -> None:
     assert actual[1] == "EUR"
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_load_basemodels_if_needed_async() -> None:
     @load_basemodels_if_needed
     async def f(

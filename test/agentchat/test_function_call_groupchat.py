@@ -40,7 +40,7 @@ func_def = {
         ("tools", [{"type": "function", "function": func_def}], True),
     ],
 )
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_function_call_groupchat(key, value, sync):
     import random
 

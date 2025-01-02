@@ -45,13 +45,16 @@ def _wait_for_predicate(predicate, err, timeout=TIMEOUT, interval=DELAY):
     """Generic to block until the predicate returns true
 
     Args:
+    ----
         predicate (Callable[, bool]): A function that returns a boolean value
         err (str): Error message to raise if nothing occurs
         timeout (float, optional): Length of time to wait for predicate. Defaults to TIMEOUT.
         interval (float, optional): Interval to check predicate. Defaults to DELAY.
 
     Raises:
+    ------
         TimeoutError: _description_
+
     """
     start = monotonic()
     while not predicate():
@@ -64,7 +67,9 @@ def _delete_search_indexes(collection: Collection, wait=True):
     """Deletes all indexes in a collection
 
     Args:
+    ----
         collection (pymongo.Collection): MongoDB Collection Abstraction
+
     """
     for index in collection.list_search_indexes():
         try:
@@ -80,14 +85,16 @@ def _empty_collections_and_delete_indexes(database, collections=None, wait=True)
     """Empty all collections within the database and remove indexes
 
     Args:
+    ----
         database (pymongo.Database): MongoDB Database Abstraction
+
     """
     for collection_name in collections or database.list_collection_names():
         _delete_search_indexes(database[collection_name], wait)
         database[collection_name].drop()
 
 
-@pytest.fixture
+@pytest.fixture()
 def db():
     """VectorDB setup and teardown, including collections and search indexes"""
     database = MongoClient(MONGODB_URI)[MONGODB_DATABASE]
@@ -102,7 +109,7 @@ def db():
     _empty_collections_and_delete_indexes(database)
 
 
-@pytest.fixture
+@pytest.fixture()
 def example_documents() -> list[Document]:
     """Note mix of integers and strings as ids"""
     return [
@@ -113,7 +120,7 @@ def example_documents() -> list[Document]:
     ]
 
 
-@pytest.fixture
+@pytest.fixture()
 def db_with_indexed_clxn(collection_name):
     """VectorDB with a collection created immediately"""
     database = MongoClient(MONGODB_URI)[MONGODB_DATABASE]
@@ -132,7 +139,7 @@ def db_with_indexed_clxn(collection_name):
 _COLLECTION_NAMING_CACHE = []
 
 
-@pytest.fixture
+@pytest.fixture()
 def collection_name():
     collection_id = random.randint(0, 100)
     while collection_id in _COLLECTION_NAMING_CACHE:
@@ -143,8 +150,7 @@ def collection_name():
 
 
 def test_create_collection(db, collection_name):
-    """
-    def create_collection(collection_name: str,
+    """Def create_collection(collection_name: str,
                         overwrite: bool = False) -> Collection
     Create a collection in the vector database.
     - Case 1. if the collection does not exist, create the collection.

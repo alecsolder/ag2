@@ -8,13 +8,14 @@ from autogen.coding.func_with_reqs import with_requirements
 
 @with_requirements(["PyMuPDF"], ["os"])
 def extract_pdf_image(pdf_path: str, output_dir: str, page_number=None):
-    """
-    Extracts images from a PDF file and saves them to the specified output directory.
+    """Extracts images from a PDF file and saves them to the specified output directory.
 
     Args:
+    ----
         pdf_path (str): The path to the PDF file.
         output_dir (str): The directory to save the extracted images.
         page_number (int, optional): The page number to extract images from. If not provided, extract images from all pages.
+
     """
     import fitz  # PyMuPDF library
 

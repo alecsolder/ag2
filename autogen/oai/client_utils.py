@@ -20,8 +20,7 @@ def validate_parameter(
     numerical_bound: tuple,
     allowed_values: list,
 ) -> Any:
-    """
-    Validates a given config parameter, checking its type, values, and setting defaults
+    """Validates a given config parameter, checking its type, values, and setting defaults
     Parameters:
         params (Dict[str, Any]): Dictionary containing parameters to validate.
         param_name (str): The name of the parameter to validate.
@@ -34,10 +33,12 @@ def validate_parameter(
         allowed_values (Optional[List[Any]]): A list of acceptable values for the parameter.
             Can be `None` if no specific values are required.
 
-    Returns:
+    Returns
+    -------
         Any: The validated parameter value or the default value if validation fails.
 
-    Raises:
+    Raises
+    ------
         TypeError: If `allowed_values` is provided but is not a list.
 
     Example Usage:
@@ -53,8 +54,8 @@ def validate_parameter(
         )
         # If "safety_model" is missing or invalid in params, defaults to "default"
     ```
-    """
 
+    """
     if allowed_values is not None and not isinstance(allowed_values, list):
         raise TypeError(f"allowed_values should be a list or None, got {type(allowed_values).__name__}")
 
@@ -81,11 +82,11 @@ def validate_parameter(
         ):
             warning = "has numerical bounds"
             if lower_bound is not None:
-                warning += f", >= {str(lower_bound)}"
+                warning += f", >= {lower_bound!s}"
             if upper_bound is not None:
                 if lower_bound is not None:
                     warning += " and"
-                warning += f" <= {str(upper_bound)}"
+                warning += f" <= {upper_bound!s}"
             if allow_None:
                 warning += ", or can be None"
 
@@ -107,14 +108,16 @@ def validate_parameter(
 
 
 def should_hide_tools(messages: list[dict[str, Any]], tools: list[dict[str, Any]], hide_tools_param: str) -> bool:
-    """
-    Determines if tools should be hidden. This function is used to hide tools when they have been run, minimising the chance of the LLM choosing them when they shouldn't.
-    Parameters:
+    """Determines if tools should be hidden. This function is used to hide tools when they have been run, minimising the chance of the LLM choosing them when they shouldn't.
+
+    Parameters
+    ----------
         messages (List[Dict[str, Any]]): List of messages
         tools (List[Dict[str, Any]]): List of tools
         hide_tools_param (str): "hide_tools" parameter value. Can be "if_all_run" (hide tools if all tools have been run), "if_any_run" (hide tools if any of the tools have been run), "never" (never hide tools). Default is "never".
 
-    Returns:
+    Returns
+    -------
         bool: Indicates whether the tools should be excluded from the response create request
 
     Example Usage:
@@ -123,8 +126,8 @@ def should_hide_tools(messages: list[dict[str, Any]], tools: list[dict[str, Any]
         messages = params.get("messages", [])
         tools = params.get("tools", None)
         hide_tools = should_hide_tools(messages, tools, params["hide_tools"])
-    """
 
+    """
     if hide_tools_param == "never" or tools is None or len(tools) == 0:
         return False
     elif hide_tools_param == "if_any_run":

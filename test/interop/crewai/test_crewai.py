@@ -31,7 +31,6 @@ else:
 class TestCrewAIInteroperability:
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
-
         crewai_tool = FileReadTool()
         self.model_type = crewai_tool.args_schema
         self.tool = CrewAIInteroperability.convert_tool(crewai_tool)

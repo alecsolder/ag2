@@ -23,7 +23,8 @@ class Agent(Protocol):
     @property
     def description(self) -> str:
         """The description of the agent. Used for the agent's introduction in
-        a group chat setting."""
+        a group chat setting.
+        """
         ...
 
     def send(
@@ -35,10 +36,12 @@ class Agent(Protocol):
         """Send a message to another agent.
 
         Args:
+        ----
             message (dict or str): the message to send. If a dict, it should be
             a JSON-serializable and follows the OpenAI's ChatCompletion schema.
             recipient (Agent): the recipient of the message.
             request_reply (bool): whether to request a reply from the recipient.
+
         """
         ...
 
@@ -51,10 +54,12 @@ class Agent(Protocol):
         """(Async) Send a message to another agent.
 
         Args:
+        ----
             message (dict or str): the message to send. If a dict, it should be
             a JSON-serializable and follows the OpenAI's ChatCompletion schema.
             recipient (Agent): the recipient of the message.
             request_reply (bool): whether to request a reply from the recipient.
+
         """
         ...
 
@@ -67,10 +72,12 @@ class Agent(Protocol):
         """Receive a message from another agent.
 
         Args:
+        ----
             message (dict or str): the message received. If a dict, it should be
             a JSON-serializable and follows the OpenAI's ChatCompletion schema.
             sender (Agent): the sender of the message.
             request_reply (bool): whether the sender requests a reply.
+
         """
 
     async def a_receive(
@@ -82,10 +89,12 @@ class Agent(Protocol):
         """(Async) Receive a message from another agent.
 
         Args:
+        ----
             message (dict or str): the message received. If a dict, it should be
             a JSON-serializable and follows the OpenAI's ChatCompletion schema.
             sender (Agent): the sender of the message.
             request_reply (bool): whether the sender requests a reply.
+
         """
         ...
 
@@ -98,13 +107,16 @@ class Agent(Protocol):
         """Generate a reply based on the received messages.
 
         Args:
+        ----
             messages (list[dict]): a list of messages received from other agents.
                 The messages are dictionaries that are JSON-serializable and
                 follows the OpenAI's ChatCompletion schema.
             sender: sender of an Agent instance.
 
         Returns:
+        -------
             str or dict or None: the generated reply. If None, no reply is generated.
+
         """
 
     async def a_generate_reply(
@@ -116,13 +128,16 @@ class Agent(Protocol):
         """(Async) Generate a reply based on the received messages.
 
         Args:
+        ----
             messages (list[dict]): a list of messages received from other agents.
                 The messages are dictionaries that are JSON-serializable and
                 follows the OpenAI's ChatCompletion schema.
             sender: sender of an Agent instance.
 
         Returns:
+        -------
             str or dict or None: the generated reply. If None, no reply is generated.
+
         """
 
 
@@ -138,5 +153,7 @@ class LLMAgent(Agent, Protocol):
         """Update this agent's system message.
 
         Args:
+        ----
             system_message (str): system message for inference.
+
         """

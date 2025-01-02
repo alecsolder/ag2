@@ -7,6 +7,7 @@
 """Create an OpenAI-compatible client using Mistral.AI's API.
 
 Example:
+-------
     ```python
     llm_config={
         "config_list": [{
@@ -25,6 +26,7 @@ Resources:
 - https://docs.mistral.ai/getting-started/quickstart/
 
 NOTE: Requires mistralai package version >= 1.0.1
+
 """
 
 import inspect
@@ -61,11 +63,12 @@ class MistralAIClient:
         """Requires api_key or environment variable to be set
 
         Args:
+        ----
             api_key (str): The API key for using Mistral.AI (or environment variable MISTRAL_API_KEY needs to be set)
-        """
 
+        """
         # Ensure we have the api_key upon instantiation
-        self.api_key = kwargs.get("api_key", None)
+        self.api_key = kwargs.get("api_key")
         if not self.api_key:
             self.api_key = os.getenv("MISTRAL_API_KEY", None)
 
@@ -80,7 +83,6 @@ class MistralAIClient:
 
     def message_retrieval(self, response: ChatCompletion) -> Union[list[str], list[ChatCompletionMessage]]:
         """Retrieve the messages from the response."""
-
         return [choice.message for choice in response.choices]
 
     def cost(self, response) -> float:
@@ -91,7 +93,7 @@ class MistralAIClient:
         mistral_params = {}
 
         # 1. Validate models
-        mistral_params["model"] = params.get("model", None)
+        mistral_params["model"] = params.get("model")
         assert mistral_params[
             "model"
         ], "Please specify the 'model' in your config list entry to nominate the Mistral.ai model to use."
@@ -240,7 +242,6 @@ class MistralAIClient:
 
 def tool_def_to_mistral(tool_definitions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Converts AutoGen tool definition to a mistral tool format"""
-
     mistral_tools = []
 
     for autogen_tool in tool_definitions:
@@ -260,7 +261,6 @@ def tool_def_to_mistral(tool_definitions: list[dict[str, Any]]) -> list[dict[str
 
 def calculate_mistral_cost(input_tokens: int, output_tokens: int, model_name: str) -> float:
     """Calculate the cost of the mistral response."""
-
     # Prices per 1 thousand tokens
     # https://mistral.ai/technology/
     model_cost_map = {

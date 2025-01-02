@@ -36,15 +36,17 @@ def gather_usage_summary(agents: list[Agent]) -> dict[dict[str, dict], dict[str,
     r"""Gather usage summary from all agents.
 
     Args:
+    ----
         agents: (list): List of agents.
 
     Returns:
+    -------
         dictionary: A dictionary containing two keys:
           - "usage_including_cached_inference": Cost information on the total usage, including the tokens in cached inference.
           - "usage_excluding_cached_inference": Cost information on the usage of tokens, excluding the tokens in cache. No larger than "usage_including_cached_inference".
 
     Example:
-
+    -------
     ```python
     {
         "usage_including_cached_inference" : {
@@ -70,8 +72,9 @@ def gather_usage_summary(agents: list[Agent]) -> dict[dict[str, dict], dict[str,
     ```
 
     Note:
-
+    ----
     If none of the agents incurred any cost (not having a client), then the usage_including_cached_inference and usage_excluding_cached_inference will be `{'total_cost': 0}`.
+
     """
 
     def aggregate_summary(usage_summary: dict[str, Any], agent_summary: dict[str, Any]) -> None:
@@ -111,22 +114,27 @@ def parse_tags_from_content(tag: str, content: Union[str, list[dict[str, Any]]])
     can be a single string or a set of attribute-value pairs.
 
     Examples:
+    --------
         `<img http://example.com/image.png> -> [{"tag": "img", "attr": {"src": "http://example.com/image.png"}, "match": re.Match}]`
         ```<audio text="Hello I'm a robot" prompt="whisper"> ->
                 [{"tag": "audio", "attr": {"text": "Hello I'm a robot", "prompt": "whisper"}, "match": re.Match}]```
 
     Args:
+    ----
         tag (str): The HTML style tag to be parsed.
         content (Union[str, List[Dict[str, Any]]]): The message content to parse. Can be a string or a list of content
             items.
 
     Returns:
+    -------
         List[Dict[str, str]]: A list of dictionaries, where each dictionary represents a parsed tag. Each dictionary
             contains three key-value pairs: 'type' which is the tag, 'attr' which is a dictionary of the parsed attributes,
             and 'match' which is a regular expression match object.
 
     Raises:
+    ------
         ValueError: If the content is not a string or a list.
+
     """
     results = []
     if isinstance(content, str):

@@ -16,8 +16,8 @@ from autogen.agentchat.contrib.agent_builder import AgentBuilder
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-from conftest import reason, skip_openai  # noqa: E402
-from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST  # noqa: E402
+from conftest import reason, skip_openai
+from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
 
 try:
     import chromadb

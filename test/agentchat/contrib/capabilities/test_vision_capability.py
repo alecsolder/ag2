@@ -21,7 +21,7 @@ else:
     skip_test = False
 
 
-@pytest.fixture
+@pytest.fixture()
 def lmm_config():
     return {
         "config_list": [{"model": "gpt-4-vision-preview", "api_key": "sk-my_key"}],
@@ -33,12 +33,12 @@ def lmm_config():
 img_name = os.path.abspath("test/test_files/test_image.png")
 
 
-@pytest.fixture
+@pytest.fixture()
 def vision_capability(lmm_config):
     return VisionCapability(lmm_config, custom_caption_func=None)
 
 
-@pytest.fixture
+@pytest.fixture()
 def conversable_agent():
     return ConversableAgent(name="conversable agent", llm_config=False)
 
@@ -95,7 +95,7 @@ def test_process_last_received_message_with_image(
 ####### Test the Custom Caption Func
 
 
-@pytest.fixture
+@pytest.fixture()
 def custom_caption_func():
     """Fixture to provide a sample custom caption function."""
 

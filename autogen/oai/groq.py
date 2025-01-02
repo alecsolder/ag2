@@ -7,6 +7,7 @@
 """Create an OpenAI-compatible client using Groq's API.
 
 Example:
+-------
     ```python
     llm_config={
         "config_list": [{
@@ -23,6 +24,7 @@ Install Groq's python library using: pip install --upgrade groq
 
 Resources:
 - https://console.groq.com/docs/quickstart
+
 """
 
 from __future__ import annotations
@@ -57,10 +59,12 @@ class GroqClient:
         """Requires api_key or environment variable to be set
 
         Args:
+        ----
             api_key (str): The API key for using Groq (or environment variable GROQ_API_KEY needs to be set)
+
         """
         # Ensure we have the api_key upon instantiation
-        self.api_key = kwargs.get("api_key", None)
+        self.api_key = kwargs.get("api_key")
         if not self.api_key:
             self.api_key = os.getenv("GROQ_API_KEY")
 
@@ -70,11 +74,10 @@ class GroqClient:
 
         if "response_format" in kwargs and kwargs["response_format"] is not None:
             warnings.warn("response_format is not supported for Groq API, it will be ignored.", UserWarning)
-        self.base_url = kwargs.get("base_url", None)
+        self.base_url = kwargs.get("base_url")
 
     def message_retrieval(self, response) -> list:
-        """
-        Retrieve and return a list of strings or a list of Choice.Message from the response.
+        """Retrieve and return a list of strings or a list of Choice.Message from the response.
 
         NOTE: if a list of Choice.Message is returned, it currently needs to contain the fields of OpenAI's ChatCompletion Message object,
         since that is expected for function or tool calling in the rest of the codebase at the moment, unless a custom agent is being used.
@@ -102,7 +105,7 @@ class GroqClient:
 
         # Check that we have what we need to use Groq's API
         # We won't enforce the available models as they are likely to change
-        groq_params["model"] = params.get("model", None)
+        groq_params["model"] = params.get("model")
         assert groq_params[
             "model"
         ], "Please specify the 'model' in your config list entry to nominate the Groq model to use."
@@ -261,7 +264,6 @@ def oai_messages_to_groq_messages(messages: list[dict[str, Any]]) -> list[dict[s
     """Convert messages from OAI format to Groq's format.
     We correct for any specific role orders and types.
     """
-
     groq_messages = copy.deepcopy(messages)
 
     # Remove the name field

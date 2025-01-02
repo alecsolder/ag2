@@ -20,7 +20,7 @@ from autogen.agentchat.contrib.reasoning_agent import ReasoningAgent, ThinkNode,
 from autogen.agentchat.user_proxy_agent import UserProxyAgent
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-from conftest import reason, skip_openai  # noqa: E402
+from conftest import reason, skip_openai
 
 skip_reasons = [reason]
 try:
@@ -48,13 +48,13 @@ Step 3: Paris is the capital city of France"""
 TEST_CONTENT = "Paris is the capital of France"
 
 
-@pytest.fixture
+@pytest.fixture()
 def think_node():
     """Create a ThinkNode instance for testing"""
     return ThinkNode(content=TEST_CONTENT)
 
 
-@pytest.fixture
+@pytest.fixture()
 def reasoning_agent():
     """Create a ReasoningAgent instance for testing"""
     config_list = [{"model": "gpt-4o", "api_key": "fake_key"}]

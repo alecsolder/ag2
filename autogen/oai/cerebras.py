@@ -7,6 +7,7 @@
 """Create an OpenAI-compatible client using Cerebras's API.
 
 Example:
+-------
     ```python
     llm_config={
         "config_list": [{
@@ -23,6 +24,7 @@ Install Cerebras's python library using: pip install --upgrade cerebras_cloud_sd
 
 Resources:
 - https://inference-docs.cerebras.ai/quickstart
+
 """
 
 from __future__ import annotations
@@ -55,7 +57,9 @@ class CerebrasClient:
         """Requires api_key or environment variable to be set
 
         Args:
+        ----
             api_key (str): The API key for using Cerebras (or environment variable CEREBRAS_API_KEY needs to be set)
+
         """
         # Ensure we have the api_key upon instantiation
         self.api_key = api_key
@@ -70,8 +74,7 @@ class CerebrasClient:
             warnings.warn("response_format is not supported for Crebras, it will be ignored.", UserWarning)
 
     def message_retrieval(self, response: ChatCompletion) -> list:
-        """
-        Retrieve and return a list of strings or a list of Choice.Message from the response.
+        """Retrieve and return a list of strings or a list of Choice.Message from the response.
 
         NOTE: if a list of Choice.Message is returned, it currently needs to contain the fields of OpenAI's ChatCompletion Message object,
         since that is expected for function or tool calling in the rest of the codebase at the moment, unless a custom agent is being used.
@@ -100,7 +103,7 @@ class CerebrasClient:
 
         # Check that we have what we need to use Cerebras's API
         # We won't enforce the available models as they are likely to change
-        cerebras_params["model"] = params.get("model", None)
+        cerebras_params["model"] = params.get("model")
         assert cerebras_params[
             "model"
         ], "Please specify the 'model' in your config list entry to nominate the Cerebras model to use."
@@ -249,7 +252,6 @@ def oai_messages_to_cerebras_messages(messages: list[dict[str, Any]]) -> list[di
     """Convert messages from OAI format to Cerebras's format.
     We correct for any specific role orders and types.
     """
-
     cerebras_messages = copy.deepcopy(messages)
 
     # Remove the name field

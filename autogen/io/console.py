@@ -19,10 +19,12 @@ class IOConsole(IOStream):
         """Print data to the output stream.
 
         Args:
+        ----
             objects (any): The data to print.
             sep (str, optional): The separator between objects. Defaults to " ".
             end (str, optional): The end of the output. Defaults to "\n".
             flush (bool, optional): Whether to flush the output. Defaults to False.
+
         """
         print(*objects, sep=sep, end=end, flush=flush)
 
@@ -30,14 +32,15 @@ class IOConsole(IOStream):
         """Read a line from the input stream.
 
         Args:
+        ----
             prompt (str, optional): The prompt to display. Defaults to "".
             password (bool, optional): Whether to read a password. Defaults to False.
 
         Returns:
+        -------
             str: The line read from the input stream.
 
         """
-
         if password:
             return getpass.getpass(prompt if prompt != "" else "Password: ")
         return input(prompt)

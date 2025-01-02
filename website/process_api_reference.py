@@ -21,7 +21,9 @@ def run_pydoc_markdown(config_file: Path) -> None:
     """Run pydoc-markdown with the specified config file.
 
     Args:
+    ----
         config_file (Path): Path to the pydoc-markdown config file
+
     """
     try:
         subprocess.run(["pydoc-markdown"], check=True, capture_output=True, text=True)
@@ -38,10 +40,13 @@ def read_file_content(file_path: str) -> str:
     """Read content from a file.
 
     Args:
+    ----
         file_path (str): Path to the file
 
     Returns:
+    -------
         str: Content of the file
+
     """
     with open(file_path, encoding="utf-8") as f:
         return f.read()
@@ -51,8 +56,10 @@ def write_file_content(file_path: str, content: str) -> None:
     """Write content to a file.
 
     Args:
+    ----
         file_path (str): Path to the file
         content (str): Content to write
+
     """
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
@@ -62,7 +69,9 @@ def convert_md_to_mdx(input_dir: Path) -> None:
     """Convert all .md files in directory to .mdx while preserving structure.
 
     Args:
+    ----
         input_dir (Path): Directory containing .md files to convert
+
     """
     if not input_dir.exists():
         print(f"Directory not found: {input_dir}")
@@ -87,7 +96,7 @@ def convert_md_to_mdx(input_dir: Path) -> None:
 
 def get_mdx_files(directory: Path) -> list[str]:
     """Get all MDX files in directory and subdirectories."""
-    return [f"{str(p.relative_to(directory).with_suffix(''))}".replace("\\", "/") for p in directory.rglob("*.mdx")]
+    return [f"{p.relative_to(directory).with_suffix('')!s}".replace("\\", "/") for p in directory.rglob("*.mdx")]
 
 
 def add_prefix(path: str, parent_groups: list[str] = None) -> str:
@@ -128,12 +137,13 @@ def create_nav_structure(paths: list[str], parent_groups: list[str] = None) -> l
 
 
 def update_nav(mint_json_path: Path, new_nav_pages: list[Any]) -> None:
-    """
-    Update the 'API Reference' section in mint.json navigation with new pages.
+    """Update the 'API Reference' section in mint.json navigation with new pages.
 
     Args:
+    ----
         mint_json_path: Path to mint.json file
         new_nav_pages: New navigation structure to replace in API Reference pages
+
     """
     try:
         # Read the current mint.json

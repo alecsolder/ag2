@@ -2,14 +2,16 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 def get_wikipedia_text(title):
-    """
-    Retrieves the text content of a Wikipedia page. It does not support tables and other complex formatting.
+    """Retrieves the text content of a Wikipedia page. It does not support tables and other complex formatting.
 
     Args:
+    ----
         title (str): The title of the Wikipedia page.
 
     Returns:
+    -------
         str or None: The text content of the Wikipedia page if it exists, None otherwise.
+
     """
     import wikipediaapi
 

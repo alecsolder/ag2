@@ -12,10 +12,10 @@ from autogen.agentchat.contrib.captainagent import CaptainAgent
 from autogen.agentchat.contrib.tool_retriever import ToolBuilder
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
-from conftest import MOCK_OPEN_AI_API_KEY, reason, skip_openai  # noqa: E402
+from conftest import MOCK_OPEN_AI_API_KEY, reason, skip_openai
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST  # noqa: E402
+from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
 
 try:
     import chromadb
@@ -73,7 +73,6 @@ def test_captain_agent_from_scratch():
     reason=reason,
 )
 def test_captain_agent_with_library():
-
     config_list = config_list_from_json(OAI_CONFIG_LIST, file_location=KEY_LOC)
     llm_config = {
         "temperature": 0,

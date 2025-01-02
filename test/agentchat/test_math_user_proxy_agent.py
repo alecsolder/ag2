@@ -20,7 +20,7 @@ from autogen.agentchat.contrib.math_user_proxy_agent import (
 )
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from conftest import skip_openai  # noqa: E402
+from conftest import skip_openai
 
 try:
     from openai import OpenAI

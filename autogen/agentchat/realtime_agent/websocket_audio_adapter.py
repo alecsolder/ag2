@@ -34,8 +34,10 @@ class WebSocketAudioAdapter(RealtimeObserver):
         """Observer for handling function calls from the OpenAI Realtime API.
 
         Args:
+        ----
             websocket (WebSocket): The websocket connection.
             logger (Logger): The logger for the observer.
+
         """
         super().__init__(logger=logger)
         self.websocket = websocket

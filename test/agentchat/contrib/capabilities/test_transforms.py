@@ -115,22 +115,22 @@ def get_text_compressors() -> list[TextCompressor]:
     return compressors
 
 
-@pytest.fixture
+@pytest.fixture()
 def message_history_limiter() -> MessageHistoryLimiter:
     return MessageHistoryLimiter(max_messages=3)
 
 
-@pytest.fixture
+@pytest.fixture()
 def message_history_limiter_keep_first() -> MessageHistoryLimiter:
     return MessageHistoryLimiter(max_messages=3, keep_first_message=True)
 
 
-@pytest.fixture
+@pytest.fixture()
 def message_token_limiter() -> MessageTokenLimiter:
     return MessageTokenLimiter(max_tokens_per_message=3)
 
 
-@pytest.fixture
+@pytest.fixture()
 def message_token_limiter_with_threshold() -> MessageTokenLimiter:
     return MessageTokenLimiter(max_tokens_per_message=1, min_tokens=10)
 
@@ -297,7 +297,6 @@ def test_message_token_limiter_get_logs(message_token_limiter, messages, expecte
 @pytest.mark.parametrize("text_compressor", get_text_compressors())
 def test_text_compression(text_compressor):
     """Test the TextMessageCompressor transform."""
-
     compressor = TextMessageCompressor(text_compressor=text_compressor)
 
     text = "Run this test with a long string. "

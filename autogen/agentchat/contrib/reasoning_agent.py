@@ -42,7 +42,6 @@ Option 4: Perform Y.
 
 
 class ThinkNode:
-
     def __init__(self, content: str, parent: Optional["ThinkNode"] = None) -> None:
         """A node in a tree structure representing a step in the reasoning process.
 
@@ -51,10 +50,12 @@ class ThinkNode:
         for traversing/visualizing the reasoning path.
 
         Args:
+        ----
             content (str): The text content/description for this reasoning step.
             parent (Optional[ThinkNode]): The parent node in the tree, if any.
 
         Attributes:
+        ----------
             content (str): The text content/description for this reasoning step.
             value (Optional[float]): A numeric score/value assigned to this node.
             parent (Optional[ThinkNode]): Reference to the parent node.
@@ -68,6 +69,7 @@ class ThinkNode:
         - Setting its depth based on the parent's depth + 1.
         - Adding itself to the parent's children list if the parent exists.
         - Providing trajectory utilities to get the full path from root to this node.
+
         """
         self.content = content
         self.value = 0
@@ -84,8 +86,10 @@ class ThinkNode:
     def _trajectory_arr(self) -> list[str]:
         """Get the full path from root to this node as a list of strings.
 
-        Returns:
+        Returns
+        -------
             List[str]: List containing the content of each node from root to current node
+
         """
         if self.parent:
             return self.parent._trajectory_arr + [self.content]
@@ -95,8 +99,10 @@ class ThinkNode:
     def trajectory(self) -> str:
         """Get a formatted string representation of the path from root to this node.
 
-        Returns:
+        Returns
+        -------
             str: A formatted string showing the question and each step in the reasoning process
+
         """
         traj = self._trajectory_arr
         ans = traj[0]
@@ -121,8 +127,10 @@ class ThinkNode:
     def to_dict(self) -> dict:
         """Convert ThinkNode to dictionary representation.
 
-        Returns:
+        Returns
+        -------
             Dict: Dictionary containing all node attributes and recursive children
+
         """
         return {
             "content": self.content,
@@ -139,11 +147,14 @@ class ThinkNode:
         """Create ThinkNode from dictionary representation.
 
         Args:
+        ----
             data (Dict): Dictionary containing node data
             parent (Optional[ThinkNode]): Parent node to attach to
 
         Returns:
+        -------
             ThinkNode: Reconstructed node with all children
+
         """
         node = cls(content=data["content"], parent=parent)
         node.value = data["value"]
@@ -160,9 +171,7 @@ class ThinkNode:
 
 
 def visualize_tree(root: ThinkNode) -> None:
-    """
-    Visualize the tree of thoughts using graphviz.
-    """
+    """Visualize the tree of thoughts using graphviz."""
     try:
         from graphviz import Digraph
     except ImportError:
@@ -197,15 +206,17 @@ def visualize_tree(root: ThinkNode) -> None:
 
 
 def extract_sft_dataset(root):
-    """
-    Extract the best trajectory or multiple equally good trajectories
+    """Extract the best trajectory or multiple equally good trajectories
     for SFT training.
 
     Args:
+    ----
         root: The root node of the tree.
 
     Returns:
+    -------
         List of best trajectories, where each trajectory is a pair of instruction and response.
+
     """
     instruction = root.content
     idx = len("# Question: ") + len(root.content) + 1
@@ -235,17 +246,19 @@ def extract_sft_dataset(root):
 
 
 def extract_rlhf_preference_dataset(root, contrastive_threshold=0.2):
-    """
-    Extract and generate preference pairs for RLHF training by comparing sibling nodes.
+    """Extract and generate preference pairs for RLHF training by comparing sibling nodes.
 
     Args:
+    ----
         root: The root node of the tree.
         contrastive_threshold (float): between (0, 1), a distance measure that we are confidence to call
             one is positive and another is negative.
 
     Returns:
+    -------
         A list of preference pairs, where each pair contains two responses and
         indicates which one is preferred.
+
     """
     preference_pairs = []
 
@@ -309,6 +322,7 @@ class ReasoningAgent(AssistantAgent):
         """Initialize a ReasoningAgent that uses tree-of-thought reasoning.
 
         Args:
+        ----
             name: Name of the agent
             llm_config: Configuration for the language model
             grader_llm_config: Optional separate configuration for the grader model. If not provided, uses llm_config
@@ -341,6 +355,7 @@ class ReasoningAgent(AssistantAgent):
                     {"method": "beam_search", "beam_size": 5, "max_depth": 4}
                     {"method": "mcts", "nsim": 10, "exploration_constant": 2.0}
                     {"method": "lats", "nsim": 5, "forest_size": 3}
+
         """
         super().__init__(name=name, llm_config=llm_config, **kwargs)
         self._verbose = verbose
@@ -384,16 +399,18 @@ class ReasoningAgent(AssistantAgent):
         self._grader = AssistantAgent(name="tot_grader", llm_config=self._grader_llm_config)
 
     def generate_forest_response(self, messages, sender, config=None):
-        """
-        Generate a response using tree-of-thought reasoning.
+        """Generate a response using tree-of-thought reasoning.
 
         Args:
+        ----
             messages: Input messages to respond to
             sender: Agent sending the messages
             config: Optional configuration
 
         Returns:
+        -------
             Tuple[bool, str]: Success flag and generated response
+
         """
         if sender == self:
             return False, ""  # Defer the LLM call to next reply functions.
@@ -427,11 +444,14 @@ class ReasoningAgent(AssistantAgent):
         """Rate the quality of a reasoning path using the grader agent.
 
         Args:
+        ----
             node (ThinkNode): Node containing the reasoning trajectory to evaluate
             is_outcome (bool): indicates whether the rating is for an outcome (final answer) or a process (thinking trajectory).
 
         Returns:
+        -------
             float: Normalized score between 0 and 1 indicating trajectory quality
+
         """
         if node.value > 0 and node.rating_details:
             # we already calculated the rating for the node
@@ -501,19 +521,21 @@ Please provide your rating along with a brief explanation of your assessment.
         return reward
 
     def _process_prompt(self, messages, sender):
-        """
-        Process the incoming messages to extract the prompt and ground truth.
+        """Process the incoming messages to extract the prompt and ground truth.
 
         This method checks if the provided messages are None and retrieves the last message's content.
         It also looks for a specific keyword "GROUND_TRUTH" in the prompt to separate the main prompt
         from the ground truth for evaluation purposes.
 
         Args:
+        ----
             messages (List[Dict[str, Any]]): A list of message dictionaries containing the content to process.
 
         Returns:
+        -------
             Tuple[Optional[str], Optional[str]]: A tuple containing the processed prompt and the ground truth.
             If the prompt is empty, returns (None, None).
+
         """
         messages = self._oai_messages[sender] if messages is None else messages
         prompt = messages[-1]["content"].strip()
@@ -536,12 +558,15 @@ Please provide your rating along with a brief explanation of your assessment.
         agent to generate possible next steps and the grader agent to evaluate paths.
 
         Args:
+        ----
             messages: Input messages to respond to
             sender: Agent sending the messages
             config: Optional configuration
 
         Returns:
+        -------
             Tuple[bool, str]: Success flag and generated response
+
         """
         root = ThinkNode(content=prompt, parent=None)
         self._root = root  # save the root node for later visualization
@@ -658,8 +683,7 @@ Please provide your rating along with a brief explanation of your assessment.
         return best_ans_node.content
 
     def _expand(self, node: ThinkNode) -> list:
-        """
-        Expand the node by generating possible next steps based on the current trajectory.
+        """Expand the node by generating possible next steps based on the current trajectory.
 
         This method sends a message to the thinker agent, asking for possible next steps
         that can be taken from the current node's trajectory. It processes the response to
@@ -667,10 +691,13 @@ Please provide your rating along with a brief explanation of your assessment.
         for each option.
 
         Args:
+        ----
             node (ThinkNode): The node to expand, representing the current state in the reasoning process.
 
         Returns:
+        -------
             List[ThinkNode]: A list of new ThinkNode instances created from the options provided by the thinker.
+
         """
         self._thinker.clear_history()
 

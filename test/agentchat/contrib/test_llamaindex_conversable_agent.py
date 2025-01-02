@@ -42,8 +42,7 @@ openaiKey = MOCK_OPEN_AI_API_KEY
 @pytest.mark.skipif(skip_for_dependencies, reason=skip_reason)
 @patch("llama_index.core.agent.ReActAgent.chat")
 def test_group_chat_with_llama_index_conversable_agent(chat_mock: MagicMock) -> None:
-    """
-    Tests the group chat functionality with two MultimodalConversable Agents.
+    """Tests the group chat functionality with two MultimodalConversable Agents.
     Verifies that the chat is correctly limited by the max_round parameter.
     Each agent is set to describe an image in a unique style, but the chat should not exceed the specified max_rounds.
     """

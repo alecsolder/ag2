@@ -1,6 +1,7 @@
 # Copyright (c) 2023 - 2024, Owners of https://github.com/ag2ai
 #
 # SPDX-License-Identifier: Apache-2.0
+
 #!/usr/bin/env python3
 import json
 import os
@@ -77,7 +78,7 @@ def get_files_to_check() -> List[Path]:
     """Determine which files to check based on environment."""
     try:
         if "--all-files" in sys.argv:
-            return list(Path(".").rglob("*.py"))
+            return list(Path().rglob("*.py"))
 
         if os.getenv("GITHUB_ACTIONS") == "true":
             return get_github_pr_files()

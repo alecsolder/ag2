@@ -73,8 +73,7 @@ You have access to the following functions. You can write python code to call th
         return
 
     def bind_user_proxy(self, agent: UserProxyAgent, tool_root: Union[str, list]):
-        """
-        Updates user proxy agent with a executor so that code executor can successfully execute function-related code.
+        """Updates user proxy agent with a executor so that code executor can successfully execute function-related code.
         Returns an updated user proxy.
         """
         if isinstance(tool_root, str):
@@ -121,8 +120,7 @@ You have access to the following functions. You can write python code to call th
 
 
 class LocalExecutorWithTools(CodeExecutor):
-    """
-    An executor that executes code blocks with injected tools. In this executor, the func within the tools can be called directly without declaring in the code block.
+    """An executor that executes code blocks with injected tools. In this executor, the func within the tools can be called directly without declaring in the code block.
 
     For example, for a tool converted from langchain, the relevant functions can be called directly.
     ```python
@@ -153,8 +151,10 @@ class LocalExecutorWithTools(CodeExecutor):
     In this case, the `wikipedia` function can be called directly in the code block. This hides the complexity of the tool.
 
     Args:
+    ----
         tools: The tools to inject into the code execution environment. Default is an empty list.
         work_dir: The working directory for the code execution. Default is the current directory.
+
     """
 
     @property
@@ -162,7 +162,7 @@ class LocalExecutorWithTools(CodeExecutor):
         """(Experimental) Export a code extractor that can be used by an agent."""
         return MarkdownCodeExtractor()
 
-    def __init__(self, tools: Optional[List[Tool]] = None, work_dir: Union[Path, str] = Path(".")):
+    def __init__(self, tools: Optional[List[Tool]] = None, work_dir: Union[Path, str] = Path()):
         self.tools = tools if tools is not None else []
         self.work_dir = work_dir
         if not os.path.exists(work_dir):
@@ -172,10 +172,13 @@ class LocalExecutorWithTools(CodeExecutor):
         """Execute code blocks and return the result.
 
         Args:
+        ----
             code_blocks (List[CodeBlock]): The code blocks to execute.
 
         Returns:
+        -------
             CodeResult: The result of the code execution.
+
         """
         logs_all = ""
         exit_code = 0  # Success code
@@ -258,10 +261,13 @@ def _wrap_function(func):
     Handles both sync and async functions.
 
     Args:
+    ----
         func: the function to be wrapped.
 
     Returns:
+    -------
         The wrapped function.
+
     """
 
     @load_basemodels_if_needed
@@ -273,9 +279,7 @@ def _wrap_function(func):
 
 
 def get_full_tool_description(py_file):
-    """
-    Retrieves the function signature for a given Python file.
-    """
+    """Retrieves the function signature for a given Python file."""
     with open(py_file) as f:
         code = f.read()
         exec(code)
@@ -301,10 +305,13 @@ def _wrap_function(func):
     Handles both sync and async functions.
 
     Args:
+    ----
         func: the function to be wrapped.
 
     Returns:
+    -------
         The wrapped function.
+
     """
 
     @load_basemodels_if_needed
@@ -316,9 +323,7 @@ def _wrap_function(func):
 
 
 def find_callables(directory):
-    """
-    Find all callable objects defined in Python files within the specified directory.
-    """
+    """Find all callable objects defined in Python files within the specified directory."""
     callables = []
     for root, dirs, files in os.walk(directory):
         for file in files:

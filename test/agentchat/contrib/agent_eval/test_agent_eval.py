@@ -9,7 +9,7 @@
 import json
 
 import pytest
-from conftest import reason, skip_openai  # noqa: E402
+from conftest import reason, skip_openai
 
 import autogen
 from autogen.agentchat.contrib.agent_eval.agent_eval import generate_criteria, quantify_criteria

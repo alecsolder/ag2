@@ -18,7 +18,7 @@ import autogen
 from autogen.math_utils import eval_math_responses
 
 sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
-from conftest import skip_openai  # noqa: E402
+from conftest import skip_openai
 
 try:
     from openai import OpenAI
@@ -169,7 +169,7 @@ def test_execute_function():
     assert "Error: " in user.execute_function(func_call=func_call)[1]["content"]
 
 
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_a_execute_function():
     import time
 
@@ -178,7 +178,7 @@ async def test_a_execute_function():
     # Create an async function
     async def add_num(num_to_be_added):
         given_num = 10
-        time.sleep(1)
+        await asyncio.sleep(1)
         return str(num_to_be_added + given_num)
 
     user = UserProxyAgent(name="test", function_map={"add_num": add_num})

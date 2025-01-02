@@ -88,10 +88,11 @@ class SocietyOfMindAgent(ConversableAgent):
         """Default response_preparer when provided with a string prompt, rather than a callable.
 
         Args:
+        ----
             prompt (str): The prompt used to extract the final response from the transcript.
             messages (list): The messages generated as part of the inner monologue group chat.
-        """
 
+        """
         _messages = [
             {
                 "role": "system",
@@ -147,7 +148,9 @@ class SocietyOfMindAgent(ConversableAgent):
         """Update the chat manager.
 
         Args:
+        ----
             chat_manager (GroupChatManager): the group chat manager
+
         """
         self._chat_manager = chat_manager
 
