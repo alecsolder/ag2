@@ -80,7 +80,7 @@ class UPDATE_SYSTEM_MESSAGE:
             sig = signature(self.update_function)
             if len(sig.parameters) != 2:
                 raise ValueError(
-                    "Update function must accept two parameters of type ConversableAgent and List[Dict[str Any]], respectively"
+                    "Update function must accept two parameters of type ConversableAgent and List[Dict[str, Any]], respectively"
                 )
             if sig.return_annotation != str:
                 raise ValueError("Update function must return a string")
