@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 from test_assistant_agent import KEY_LOC, OAI_CONFIG_LIST
 
 import autogen
-from autogen.agentchat import UPDATE_SYSTEM_MESSAGE, ConversableAgent, UserProxyAgent
+from autogen.agentchat import ConversableAgent, UpdateSystemMessage, UserProxyAgent
 from autogen.agentchat.conversable_agent import register_function
 from autogen.exception_utils import InvalidCarryOverType, SenderRequired
 from autogen.tools.tool import Tool
@@ -1597,21 +1597,21 @@ def test_update_system_message():
 
     # Test invalid update function
     with pytest.raises(ValueError, match="Update function must be either a string or a callable"):
-        ConversableAgent("agent3", update_agent_state_before_reply=UPDATE_SYSTEM_MESSAGE(123))
+        ConversableAgent("agent3", update_agent_state_before_reply=UpdateSystemMessage(123))
 
     # Test invalid callable (wrong number of parameters)
     def invalid_update_function(context_variables):
         return "Invalid function"
 
     with pytest.raises(ValueError, match="Update function must accept two parameters"):
-        ConversableAgent("agent4", update_agent_state_before_reply=UPDATE_SYSTEM_MESSAGE(invalid_update_function))
+        ConversableAgent("agent4", update_agent_state_before_reply=UpdateSystemMessage(invalid_update_function))
 
     # Test invalid callable (wrong return type)
     def invalid_return_function(context_variables, messages) -> dict:
         return {}
 
     with pytest.raises(ValueError, match="Update function must return a string"):
-        ConversableAgent("agent5", update_agent_state_before_reply=UPDATE_SYSTEM_MESSAGE(invalid_return_function))
+        ConversableAgent("agent5", update_agent_state_before_reply=UpdateSystemMessage(invalid_return_function))
 
 
 if __name__ == "__main__":

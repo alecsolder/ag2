@@ -238,8 +238,8 @@ flight_cancel = ConversableAgent(
 register_hand_off(
     agent=flight_modification,
     hand_to=[
-        ON_CONDITION(flight_cancel, "To cancel a flight"),
-        ON_CONDITION(flight_change, "To change a flight"),
+        OnCondition(flight_cancel, "To cancel a flight"),
+        OnCondition(flight_change, "To change a flight"),
     ]
 )
 ```

@@ -57,7 +57,7 @@ __CONTEXT_VARIABLES_PARAM_NAME__ = "context_variables"
 
 
 @dataclass
-class UPDATE_SYSTEM_MESSAGE:
+class UpdateSystemMessage:
     """Update the agent's system message before they reply
 
     Args:
@@ -86,6 +86,18 @@ class UPDATE_SYSTEM_MESSAGE:
                 raise ValueError("Update function must return a string")
         else:
             raise ValueError("Update function must be either a string or a callable")
+
+
+class UPDATE_SYSTEM_MESSAGE(UpdateSystemMessage):
+    """Deprecated: Use UpdateSystemMessage instead. This class will be removed in a future version (TBD)."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "UPDATE_SYSTEM_MESSAGE is deprecated and will be removed in a future version (TBD). Use UpdateSystemMessage instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
 
 
 class ConversableAgent(LLMAgent):
@@ -126,7 +138,7 @@ class ConversableAgent(LLMAgent):
         context_variables: Optional[dict[str, Any]] = None,
         functions: Union[list[Callable], Callable] = None,
         update_agent_state_before_reply: Optional[
-            Union[list[Union[Callable, UPDATE_SYSTEM_MESSAGE]], Callable, UPDATE_SYSTEM_MESSAGE]
+            Union[list[Union[Callable, UpdateSystemMessage]], Callable, UpdateSystemMessage]
         ] = None,
     ):
         """
@@ -393,19 +405,19 @@ class ConversableAgent(LLMAgent):
         """
         if functions is None:
             return
-        if not isinstance(functions, list) and type(functions) not in [UPDATE_SYSTEM_MESSAGE, Callable]:
+        if not isinstance(functions, list) and type(functions) not in [UpdateSystemMessage, Callable]:
             raise ValueError("functions must be a list of callables")
 
         if not isinstance(functions, list):
             functions = [functions]
 
         for func in functions:
-            if isinstance(func, UPDATE_SYSTEM_MESSAGE):
+            if isinstance(func, UpdateSystemMessage):
 
                 # Wrapper function that allows this to be used in the update_agent_state hook
                 # Its primary purpose, however, is just to update the agent's system message
                 # Outer function to create a closure with the update function
-                def create_wrapper(update_func: UPDATE_SYSTEM_MESSAGE):
+                def create_wrapper(update_func: UpdateSystemMessage):
                     def update_system_message_wrapper(
                         agent: ConversableAgent, messages: list[dict[str, Any]]
                     ) -> list[dict[str, Any]]:

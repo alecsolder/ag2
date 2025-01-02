@@ -66,21 +66,21 @@ Providing additional flexibility, we introduce the capability to define an after
 The following are the prioritized handoffs for each iteration of the swarm.
 
 1. **Agent-level: Calls a tool that returns a swarm agent**: A swarm agent's tool call returns the next agent to hand off to.
-2. **Agent-level: Calls a pre-defined conditional handoff**: A swarm agent has an `ON_CONDITION` handoff that is chosen by the LLM (behaves like a tool call).
+2. **Agent-level: Calls a pre-defined conditional handoff**: A swarm agent has an `OnCondition` handoff that is chosen by the LLM (behaves like a tool call).
 3. **Agent-level: After work hand off**: When no tool calls are made it can use an, optional, `AFTER_WORK` handoff that is a preset option or a nominated swarm agent.
 4. **Swarm-level: After work handoff**: If the agent does not have an `AFTER_WORK` handoff, the swarm's `AFTER_WORK` handoff will be used.
 
 In the following code sample a `ConversableAgent` named `responder` has:
-- Two conditional handoffs registered (`ON_CONDITION`), specifying the agent to hand off to and the condition to trigger the handoff.
+- Two conditional handoffs registered (`OnCondition`), specifying the agent to hand off to and the condition to trigger the handoff.
 - An after-work handoff (`AFTER_WORK`) nominated using one of the preset options (`TERMINATE`, `REVERT_TO_USER`, `STAY`). This could also be a swarm agent.
 
 ```python
-from autogen import register_hand_off, ON_CONDITION, AfterWorkOption
+from autogen import register_hand_off, OnCondition, AfterWorkOption
 register_hand_off(
     agent=responder,
     hand_to=[
- ON_CONDITION(weather, "If you need weather data, hand off to the Weather_Agent"),
- ON_CONDITION(travel_advisor, "If you have weather data but need formatted recommendations, hand off to the Travel_Advisor_Agent"),
+ OnCondition(weather, "If you need weather data, hand off to the Weather_Agent"),
+ OnCondition(travel_advisor, "If you have weather data but need formatted recommendations, hand off to the Travel_Advisor_Agent"),
  AFTER_WORK(AfterWorkOption.REVERT_TO_USER),
  ]
 )
@@ -110,7 +110,7 @@ history, context, last_agent = initiate_swarm_chat(
 This example of managing refunds demonstrates the context handling, swarm and agent-level conditional and after work hand offs, and the human-in-the-loop feature.
 
 ```python
-from autogen import initiate_swarm_chat, ConversableAgent, SwarmResult, ON_CONDITION, AFTER_WORK, AfterWorkOption
+from autogen import initiate_swarm_chat, ConversableAgent, SwarmResult, OnCondition, AFTER_WORK, AfterWorkOption
 from autogen import UserProxyAgent
 import os
 
@@ -180,7 +180,7 @@ satisfaction_surveyor = ConversableAgent(
 register_hand_off(
     agent=customer_service,
     hand_to=[
-        ON_CONDITION(refund_specialist, "After customer verification, transfer to refund specialist"),
+        OnCondition(refund_specialist, "After customer verification, transfer to refund specialist"),
         AFTER_WORK(AfterWorkOption.REVERT_TO_USER)
     ]
 )

@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import copy
 import json
+import warnings
 from dataclasses import dataclass
 from enum import Enum
 from inspect import signature
@@ -30,7 +31,7 @@ class AfterWorkOption(Enum):
 
 
 @dataclass
-class AFTER_WORK:
+class AfterWork:
     """Handles the next step in the conversation when an agent doesn't suggest a tool call or a handoff
 
     Args:
@@ -46,8 +47,20 @@ class AFTER_WORK:
             self.agent = AfterWorkOption(self.agent.upper())
 
 
+class AFTER_WORK(AfterWork):
+    """Deprecated: Use AfterWork instead. This class will be removed in a future version (TBD)."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "AFTER_WORK is deprecated and will be removed in a future version (TBD). Use AfterWork instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
 @dataclass
-class ON_CONDITION:
+class OnCondition:
     """Defines a condition for transitioning to another agent or nested chats
 
     Args:
@@ -55,7 +68,7 @@ class ON_CONDITION:
             If a Dict, it should follow the convention of the nested chat configuration, with the exception of a carryover configuration which is unique to Swarms.
             Swarm Nested chat documentation: https://docs.ag2.ai/docs/topics/swarm#registering-handoffs-to-a-nested-chat
         condition (str): The condition for transitioning to the target agent, evaluated by the LLM to determine whether to call the underlying function/tool which does the transition.
-        available (Union[Callable, str]): Optional condition to determine if this ON_CONDITION is available. Can be a Callable or a string.
+        available (Union[Callable, str]): Optional condition to determine if this OnCondition is available. Can be a Callable or a string.
             If a string, it will look up the value of the context variable with that name, which should be a bool.
     """
 
@@ -77,6 +90,18 @@ class ON_CONDITION:
             assert isinstance(self.available, (Callable, str)), "'available' must be a callable or a string"
 
 
+class ON_CONDITION(OnCondition):
+    """Deprecated: Use OnCondition instead. This class will be removed in a future version (TBD)."""
+
+    def __init__(self, *args, **kwargs):
+        warnings.warn(
+            "ON_CONDITION is deprecated and will be removed in a future version (TBD). Use OnCondition instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        super().__init__(*args, **kwargs)
+
+
 def _establish_swarm_agent(agent: ConversableAgent):
     """Establish the swarm agent with the swarm-related attributes and hooks. Not for the tool executor.
 
@@ -94,7 +119,7 @@ def _establish_swarm_agent(agent: ConversableAgent):
     # List of Dictionaries containing the nested_chats and condition
     agent._swarm_nested_chat_handoffs = []
 
-    # Store conditional functions (and their ON_CONDITION instances) to add/remove later when transitioning to this agent
+    # Store conditional functions (and their OnCondition instances) to add/remove later when transitioning to this agent
     agent._swarm_conditional_functions = {}
 
     # Register the hook to update agent state (except tool executor)
@@ -180,12 +205,12 @@ def _create_nested_chats(agent: ConversableAgent, nested_chat_agents: list[Conve
         )
 
         # After the nested chat is complete, transfer back to the parent agent
-        register_hand_off(nested_chat_agent, AFTER_WORK(agent=agent))
+        register_hand_off(nested_chat_agent, AfterWork(agent=agent))
 
         nested_chat_agents.append(nested_chat_agent)
 
         # Nested chat is triggered through an agent transfer to this nested chat agent
-        register_hand_off(agent, ON_CONDITION(nested_chat_agent, condition, available))
+        register_hand_off(agent, OnCondition(nested_chat_agent, condition, available))
 
 
 def _process_initial_messages(
@@ -325,7 +350,7 @@ def _determine_next_agent(
     after_work_condition = (
         last_swarm_speaker._swarm_after_work if last_swarm_speaker._swarm_after_work is not None else swarm_after_work
     )
-    if isinstance(after_work_condition, AFTER_WORK):
+    if isinstance(after_work_condition, AfterWork):
         after_work_condition = after_work_condition.agent
 
     # Evaluate callable after_work
@@ -397,7 +422,7 @@ def initiate_swarm_chat(
     user_agent: Optional[UserProxyAgent] = None,
     max_rounds: int = 20,
     context_variables: Optional[dict[str, Any]] = None,
-    after_work: Optional[Union[AfterWorkOption, Callable]] = AFTER_WORK(AfterWorkOption.TERMINATE),
+    after_work: Optional[Union[AfterWorkOption, Callable]] = AfterWork(AfterWorkOption.TERMINATE),
 ) -> tuple[ChatResult, dict[str, Any], ConversableAgent]:
     """Initialize and run a swarm chat
 
@@ -409,7 +434,7 @@ def initiate_swarm_chat(
         max_rounds: Maximum number of conversation rounds.
         context_variables: Starting context variables.
         after_work: Method to handle conversation continuation when an agent doesn't select the next agent. If no agent is selected and no tool calls are output, we will use this method to determine the next agent.
-            Must be a AFTER_WORK instance (which is a dataclass accepting a ConversableAgent, AfterWorkOption, A str (of the AfterWorkOption)) or a callable.
+            Must be a AfterWork instance (which is a dataclass accepting a ConversableAgent, AfterWorkOption, A str (of the AfterWorkOption)) or a callable.
             AfterWorkOption:
                 - TERMINATE (Default): Terminate the conversation.
                 - REVERT_TO_USER : Revert to the user agent if a user agent is provided. If not provided, terminate the conversation.
@@ -476,7 +501,7 @@ async def a_initiate_swarm_chat(
     user_agent: Optional[UserProxyAgent] = None,
     max_rounds: int = 20,
     context_variables: Optional[dict[str, Any]] = None,
-    after_work: Optional[Union[AfterWorkOption, Callable]] = AFTER_WORK(AfterWorkOption.TERMINATE),
+    after_work: Optional[Union[AfterWorkOption, Callable]] = AfterWork(AfterWorkOption.TERMINATE),
 ) -> tuple[ChatResult, dict[str, Any], ConversableAgent]:
     """Initialize and run a swarm chat asynchronously
 
@@ -488,7 +513,7 @@ async def a_initiate_swarm_chat(
         max_rounds: Maximum number of conversation rounds.
         context_variables: Starting context variables.
         after_work: Method to handle conversation continuation when an agent doesn't select the next agent. If no agent is selected and no tool calls are output, we will use this method to determine the next agent.
-            Must be a AFTER_WORK instance (which is a dataclass accepting a ConversableAgent, AfterWorkOption, A str (of the AfterWorkOption)) or a callable.
+            Must be a AfterWork instance (which is a dataclass accepting a ConversableAgent, AfterWorkOption, A str (of the AfterWorkOption)) or a callable.
             AfterWorkOption:
                 - TERMINATE (Default): Terminate the conversation.
                 - REVERT_TO_USER : Revert to the user agent if a user agent is provided. If not provided, terminate the conversation.
@@ -582,13 +607,13 @@ def _set_to_tool_execution(agent: ConversableAgent):
 
 def register_hand_off(
     agent: ConversableAgent,
-    hand_to: Union[list[Union[ON_CONDITION, AFTER_WORK]], ON_CONDITION, AFTER_WORK],
+    hand_to: Union[list[Union[OnCondition, AfterWork]], OnCondition, AfterWork],
 ):
     """Register a function to hand off to another agent.
 
     Args:
         agent: The agent to register the hand off with.
-        hand_to: A list of ON_CONDITIONs and an, optional, AFTER_WORK condition
+        hand_to: A list of OnCondition's and an, optional, AfterWork condition
 
     Hand off template:
     def transfer_to_agent_name() -> ConversableAgent:
@@ -600,27 +625,27 @@ def register_hand_off(
     if not hasattr(agent, "_swarm_is_established"):
         _establish_swarm_agent(agent)
 
-    # Ensure that hand_to is a list or ON_CONDITION or AFTER_WORK
-    if not isinstance(hand_to, (list, ON_CONDITION, AFTER_WORK)):
-        raise ValueError("hand_to must be a list of ON_CONDITION or AFTER_WORK")
+    # Ensure that hand_to is a list or OnCondition or AfterWork
+    if not isinstance(hand_to, (list, OnCondition, AfterWork)):
+        raise ValueError("hand_to must be a list of OnCondition or AfterWork")
 
-    if isinstance(hand_to, (ON_CONDITION, AFTER_WORK)):
+    if isinstance(hand_to, (OnCondition, AfterWork)):
         hand_to = [hand_to]
 
     for transit in hand_to:
-        if isinstance(transit, AFTER_WORK):
+        if isinstance(transit, AfterWork):
             assert isinstance(
                 transit.agent, (AfterWorkOption, ConversableAgent, str, Callable)
             ), "Invalid After Work value"
             agent._swarm_after_work = transit
-        elif isinstance(transit, ON_CONDITION):
+        elif isinstance(transit, OnCondition):
 
             if isinstance(transit.target, ConversableAgent):
                 # Transition to agent
 
                 # Create closure with current loop transit value
                 # to ensure the condition matches the one in the loop
-                def make_transfer_function(current_transit: ON_CONDITION):
+                def make_transfer_function(current_transit: OnCondition):
                     def transfer_to_agent() -> ConversableAgent:
                         return current_transit.target
 
@@ -629,7 +654,7 @@ def register_hand_off(
                 transfer_func = make_transfer_function(transit)
 
                 # Store function to add/remove later based on it being 'available'
-                # Function names are made unique and allow multiple ON_CONDITIONS to the same agent
+                # Function names are made unique and allow multiple OnCondition's to the same agent
                 base_func_name = f"transfer_{agent.name}_to_{transit.target.name}"
                 func_name = base_func_name
                 count = 2
@@ -648,11 +673,11 @@ def register_hand_off(
                 )
 
         else:
-            raise ValueError("Invalid hand off condition, must be either ON_CONDITION or AFTER_WORK")
+            raise ValueError("Invalid hand off condition, must be either OnCondition or AfterWork")
 
 
 def _update_conditional_functions(agent: ConversableAgent, messages: Optional[list[dict]] = None) -> None:
-    """Updates the agent's functions based on the ON_CONDITION's available condition."""
+    """Updates the agent's functions based on the OnCondition's available condition."""
     for func_name, (func, on_condition) in agent._swarm_conditional_functions.items():
         is_available = True
 

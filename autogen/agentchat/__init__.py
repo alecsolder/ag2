@@ -17,13 +17,15 @@ from .contrib.reasoning_agent import (
 from .contrib.swarm_agent import (
     AFTER_WORK,
     ON_CONDITION,
+    AfterWork,
     AfterWorkOption,
+    OnCondition,
     SwarmResult,
     a_initiate_swarm_chat,
     initiate_swarm_chat,
     register_hand_off,
 )
-from .conversable_agent import UPDATE_SYSTEM_MESSAGE, ConversableAgent, register_function
+from .conversable_agent import UPDATE_SYSTEM_MESSAGE, ConversableAgent, UpdateSystemMessage, register_function
 from .groupchat import GroupChat, GroupChatManager
 from .user_proxy_agent import UserProxyAgent
 from .utils import gather_usage_summary
@@ -43,9 +45,12 @@ __all__ = [
     "a_initiate_swarm_chat",
     "SwarmResult",
     "ON_CONDITION",
+    "OnCondition",
     "AFTER_WORK",
+    "AfterWork",
     "AfterWorkOption",
     "register_hand_off",
+    "UpdateSystemMessage",
     "UPDATE_SYSTEM_MESSAGE",
     "ReasoningAgent",
     "visualize_tree",
