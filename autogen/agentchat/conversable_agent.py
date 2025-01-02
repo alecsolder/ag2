@@ -80,7 +80,7 @@ class UPDATE_SYSTEM_MESSAGE:
             sig = signature(self.update_function)
             if len(sig.parameters) != 2:
                 raise ValueError(
-                    "Update function must accept two parameters of type ConversableAgent and List[Dict[str Any]], respectively"
+                    "Update function must accept two parameters of type ConversableAgent and List[Dict[str, Any]], respectively"
                 )
             if sig.return_annotation != str:
                 raise ValueError("Update function must return a string")
@@ -682,6 +682,52 @@ class ConversableAgent(LLMAgent):
         chat["message"] = carry_over_message
 
     @staticmethod
+    def _process_chat_queue_carryover(
+        chat_queue: list[dict[str, Any]],
+        recipient: Agent,
+        messages: Union[str, Callable],
+        sender: Agent,
+        config: Any,
+        trim_messages: int = 2,
+    ) -> tuple[bool, Optional[str]]:
+        """Process carryover configuration for the first chat in the queue.
+
+        Args:
+            chat_queue: List of chat configurations
+            recipient: Receiving agent
+            messages: Chat messages
+            sender: Sending agent
+            config: LLM configuration
+            trim_messages: Number of messages to trim for nested chat carryover (default 2 for swarm chats)
+
+        Returns:
+            Tuple containing:
+                - restore_flag: Whether the original message needs to be restored
+                - original_message: The original message to restore (if any)
+        """
+        restore_chat_queue_message = False
+        original_chat_queue_message = None
+
+        # Carryover configuration allowed on the first chat in the queue only, trim the last two messages specifically for swarm nested chat carryover as these are the messages for the transition to the nested chat agent
+        if len(chat_queue) > 0 and "carryover_config" in chat_queue[0]:
+            if "message" in chat_queue[0]:
+                # As we're updating the message in the nested chat queue, we need to restore it after finishing this nested chat.
+                restore_chat_queue_message = True
+                original_chat_queue_message = chat_queue[0]["message"]
+
+            # TODO Check the trimming required if not a swarm chat, it may not be 2 because other chats don't have the swarm transition messages. We may need to add as a carryover_config parameter.
+            ConversableAgent._process_nested_chat_carryover(
+                chat=chat_queue[0],
+                recipient=recipient,
+                messages=messages,
+                sender=sender,
+                config=config,
+                trim_n_messages=trim_messages,
+            )
+
+        return restore_chat_queue_message, original_chat_queue_message
+
+    @staticmethod
     def _summary_from_nested_chats(
         chat_queue: list[dict[str, Any]], recipient: Agent, messages: Union[str, Callable], sender: Agent, config: Any
     ) -> tuple[bool, Union[str, None]]:
@@ -700,16 +746,10 @@ class ConversableAgent(LLMAgent):
         Returns:
             Tuple[bool, str]: A tuple where the first element indicates the completion of the chat, and the second element contains the summary of the last chat if any chats were initiated.
         """
-        # Carryover configuration allowed on the first chat in the queue only, trim the last two messages specifically for swarm nested chat carryover as these are the messages for the transition to the nested chat agent
-        restore_chat_queue_message = False
-        if len(chat_queue) > 0 and "carryover_config" in chat_queue[0]:
-            if "message" in chat_queue[0]:
-                # As we're updating the message in the nested chat queue, we need to restore it after finishing this nested chat.
-                restore_chat_queue_message = True
-                original_chat_queue_message = chat_queue[0]["message"]
-
-            # TODO Check the trimming required if not a swarm chat, it may not be 2 because other chats don't have the swarm transition messages.
-            ConversableAgent._process_nested_chat_carryover(chat_queue[0], recipient, messages, sender, config, 2)
+        # Process carryover configuration
+        restore_chat_queue_message, original_chat_queue_message = ConversableAgent._process_chat_queue_carryover(
+            chat_queue, recipient, messages, sender, config
+        )
 
         chat_to_run = ConversableAgent._get_chats_to_run(chat_queue, recipient, messages, sender, config)
         if not chat_to_run:
@@ -741,16 +781,10 @@ class ConversableAgent(LLMAgent):
         Returns:
             Tuple[bool, str]: A tuple where the first element indicates the completion of the chat, and the second element contains the summary of the last chat if any chats were initiated.
         """
-        # Carryover configuration allowed on the first chat in the queue only, trim the last two messages specifically for swarm nested chat carryover as these are the messages for the transition to the nested chat agent
-        restore_chat_queue_message = False
-        if len(chat_queue) > 0 and "carryover_config" in chat_queue[0]:
-            if "message" in chat_queue[0]:
-                # As we're updating the message in the nested chat queue, we need to restore it after finishing this nested chat.
-                restore_chat_queue_message = True
-                original_chat_queue_message = chat_queue[0]["message"]
-
-            # TODO Check the trimming required if not a swarm chat, it may not be 2 because other chats don't have the swarm transition messages.
-            ConversableAgent._process_nested_chat_carryover(chat_queue[0], recipient, messages, sender, config, 2)
+        # Process carryover configuration
+        restore_chat_queue_message, original_chat_queue_message = ConversableAgent._process_chat_queue_carryover(
+            chat_queue, recipient, messages, sender, config
+        )
 
         chat_to_run = ConversableAgent._get_chats_to_run(chat_queue, recipient, messages, sender, config)
         if not chat_to_run:
