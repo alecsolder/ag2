@@ -87,5 +87,10 @@ repos:
     rev: v3.3.3
     hooks:
       - id: pylint
-        args: ['--errors-only']  # Optional: arguments for Pylint; remove or modify as needed
+        args:
+          [
+            '--errors-only',
+            '--disable=C,R',
+            '--disable=import-error',
+          ]  # Optional: arguments for Pylint; remove or modify as needed
         additional_dependencies: []  # Optional: add any additional dependencies (e.g., plugins)
