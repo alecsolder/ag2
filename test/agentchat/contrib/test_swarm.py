@@ -14,6 +14,7 @@ from autogen.agentchat.contrib.swarm_agent import (
     AfterWorkOption,
     OnCondition,
     SwarmResult,
+    UpdateCondition,
     _cleanup_temp_user_messages,
     _create_nested_chats,
     _prepare_swarm_agents,
@@ -22,7 +23,6 @@ from autogen.agentchat.contrib.swarm_agent import (
     a_initiate_swarm_chat,
     initiate_swarm_chat,
     register_hand_off,
-    UpdateCondition,
 )
 from autogen.agentchat.conversable_agent import ConversableAgent, UpdateSystemMessage
 from autogen.agentchat.groupchat import GroupChat, GroupChatManager
@@ -1024,11 +1024,8 @@ def test_update_on_condition_str():
     register_hand_off(
         agent1,
         hand_to=OnCondition(
-            target=agent2,
-            condition=UpdateCondition(
-                update_function="Transfer when {test_var} is active"
-            )
-        )
+            target=agent2, condition=UpdateCondition(update_function="Transfer when {test_var} is active")
+        ),
     )
 
     # Mock LLM responses
@@ -1064,13 +1061,7 @@ def test_update_on_condition_str():
 
     agent3 = ConversableAgent("agent3", llm_config=testing_llm_config)
     register_hand_off(
-        agent2,
-        hand_to=OnCondition(
-            target=agent3,
-            condition=UpdateCondition(
-                update_function=custom_update_function
-            )
-        )
+        agent2, hand_to=OnCondition(target=agent3, condition=UpdateCondition(update_function=custom_update_function))
     )
 
     # Reset condition container

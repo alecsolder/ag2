@@ -21,6 +21,7 @@ from ..conversable_agent import __CONTEXT_VARIABLES_PARAM_NAME__, ConversableAge
 from ..groupchat import GroupChat, GroupChatManager
 from ..user_proxy_agent import UserProxyAgent
 
+
 @dataclass
 class UpdateCondition:
     """Update the condition string before they reply
@@ -52,7 +53,7 @@ class UpdateCondition:
                 raise ValueError("Update function must return a string")
         else:
             raise ValueError("Update function must be either a string or a callable")
-        
+
 
 # Created tool executor's name
 __TOOL_EXECUTOR_NAME__ = "_Swarm_Tool_Executor"
@@ -724,25 +725,25 @@ def _update_conditional_functions(agent: ConversableAgent, messages: Optional[li
             elif isinstance(on_condition.available, str):
                 is_available = agent.get_context(on_condition.available) or False
 
-        # first remove the function if it exists 
+        # first remove the function if it exists
         if func_name in agent._function_map:
             agent.update_tool_signature(func_name, is_remove=True)
             del agent._function_map[func_name]
-        
+
         # then add the function if it is available, so that the function signature is updated
         if is_available:
             condition = on_condition.condition
             if isinstance(condition, UpdateCondition):
                 if isinstance(condition.update_function, str):
                     condition = OpenAIWrapper.instantiate(
-                                    template=condition.update_function,
-                                    context=agent._context_variables,
-                                    allow_format_str_template=True,
-                                )
+                        template=condition.update_function,
+                        context=agent._context_variables,
+                        allow_format_str_template=True,
+                    )
                 else:
                     condition = condition.update_function(agent, messages)
             agent._add_single_function(func, func_name, condition)
-        
+ 
 
 def _generate_swarm_tool_reply(
     agent: ConversableAgent,
