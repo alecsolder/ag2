@@ -1079,7 +1079,6 @@ def test_update_on_condition_str():
             "tool_calls": [{"type": "function", "function": {"name": func_name}}],
         }
 
-
     agent2.register_reply([ConversableAgent, None], mock_generate_oai_reply_tool_2_3)
     agent3.register_reply([ConversableAgent, None], lambda *args, **kwargs: (True, "Response from agent3"))
 

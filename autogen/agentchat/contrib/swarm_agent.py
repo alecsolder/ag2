@@ -743,7 +743,7 @@ def _update_conditional_functions(agent: ConversableAgent, messages: Optional[li
                 else:
                     condition = condition.update_function(agent, messages)
             agent._add_single_function(func, func_name, condition)
- 
+
 
 def _generate_swarm_tool_reply(
     agent: ConversableAgent,
