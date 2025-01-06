@@ -19,7 +19,7 @@ from autogen.tools import get_function_schema
 from ..agent import Agent
 from ..chat import ChatResult
 from ..conversable_agent import __CONTEXT_VARIABLES_PARAM_NAME__, ConversableAgent
-from ..groupchat import GroupChat, GroupChatManager
+from ..groupchat import __SELECT_SPEAKER_PROMPT_TEMPLATE__, GroupChat, GroupChatManager
 from ..user_proxy_agent import UserProxyAgent
 
 
@@ -75,14 +75,29 @@ class AfterWork:
         agent: The agent to hand off to or the after work option. Can be a ConversableAgent, a string name of a ConversableAgent, an AfterWorkOption, or a Callable.
             The Callable signature is:
                 def my_after_work_func(last_speaker: ConversableAgent, messages: List[Dict[str, Any]], groupchat: GroupChat) -> Union[AfterWorkOption, ConversableAgent, str]:
+        next_agent_selection_msg: Optional[Union[str, Callable, UpdateCondition]]: Optional message to use for the agent selection (in internal group chat), only valid for when agent is AfterWorkOption.SWARM_MANAGER.
+            If an UpdateCondition, that will take a string or a Callable, see the UpdateCondition class for more information.
     """
 
     agent: Union[AfterWorkOption, ConversableAgent, str, Callable]
-    next_agent_selection_msg: Optional[Union[str, Callable, UpdateCondition]] = None
+    next_agent_selection_msg: Optional[Union[str, UpdateCondition]] = None
 
     def __post_init__(self):
         if isinstance(self.agent, str):
             self.agent = AfterWorkOption(self.agent.upper())
+
+        # next_agent_selection_msg is only valid for when agent is AfterWorkOption.SWARM_MANAGER, but isn't mandatory
+        if self.next_agent_selection_msg is not None:
+
+            if not isinstance(self.next_agent_selection_msg, (str, UpdateCondition)):
+                raise ValueError("next_agent_selection_msg must be a string or an UpdateCondition")
+
+            if self.agent != AfterWorkOption.SWARM_MANAGER:
+                warnings.warn(
+                    "next_agent_selection_msg is only valid for agent=AfterWorkOption.SWARM_MANAGER. Ignoring the value.",
+                    UserWarning,
+                )
+                self.next_agent_selection_msg = None
 
 
 class AFTER_WORK(AfterWork):
@@ -125,7 +140,7 @@ class OnCondition:
         if isinstance(self.condition, str):
             assert self.condition.strip(), "'condition' must be a non-empty string"
         else:
-            assert isinstance(self.condition, UpdateCondition), "'condition' must be a string or UpdateOnConditionStr"
+            assert isinstance(self.condition, UpdateCondition), "'condition' must be a string or UpdateOnCondition"
 
         if self.available is not None:
             assert isinstance(self.available, (Callable, str)), "'available' must be a callable or a string"
@@ -155,6 +170,7 @@ def _establish_swarm_agent(agent: ConversableAgent):
         return f"Swarm agent --> {self.name}"
 
     agent._swarm_after_work = None
+    agent._swarm_after_work_selection_msg = None
 
     # Store nested chats hand offs as we'll establish these in the initiate_swarm_chat
     # List of Dictionaries containing the nested_chats and condition
@@ -330,6 +346,31 @@ def _cleanup_temp_user_messages(chat_result: ChatResult) -> None:
             del message["name"]
 
 
+def _update_groupchat_selection_message(
+    groupchat: GroupChat,
+    context_variables: dict[str, Any],
+    after_work_next_agent_selection_msg: Optional[Union[str, UpdateCondition]],
+) -> None:
+    """Update or restore the groupchat speaker selection message (for 'auto' selection)
+
+    Args:
+        groupchat: GroupChat instance.
+        after_work_next_agent_selection_msg: Optional message to use for the agent selection (in internal group chat).
+    """
+    if after_work_next_agent_selection_msg is None:
+        # If there's no selection message, restore the default
+        groupchat.select_speaker_prompt_template = __SELECT_SPEAKER_PROMPT_TEMPLATE__
+    else:
+        if isinstance(after_work_next_agent_selection_msg, str):
+            groupchat.select_speaker_prompt_template = after_work_next_agent_selection_msg
+        elif isinstance(after_work_next_agent_selection_msg, UpdateCondition):
+            groupchat.select_speaker_prompt_template = OpenAIWrapper.instantiate(
+                template=after_work_next_agent_selection_msg.update_function,
+                context=context_variables,
+                allow_format_str_template=True,
+            )
+
+
 def _determine_next_agent(
     last_speaker: ConversableAgent,
     groupchat: GroupChat,
@@ -387,11 +428,14 @@ def _determine_next_agent(
     if (user_agent and last_speaker == user_agent) or groupchat.messages[-1]["role"] == "tool":
         return last_swarm_speaker
 
+    after_work_next_agent_selection_msg = None
+
     # Resolve after_work condition (agent-level overrides global)
     after_work_condition = (
         last_swarm_speaker._swarm_after_work if last_swarm_speaker._swarm_after_work is not None else swarm_after_work
     )
     if isinstance(after_work_condition, AfterWork):
+        after_work_next_agent_selection_msg = after_work_condition.next_agent_selection_msg
         after_work_condition = after_work_condition.agent
 
     # Evaluate callable after_work
@@ -413,6 +457,10 @@ def _determine_next_agent(
         elif after_work_condition == AfterWorkOption.STAY:
             return last_speaker
         elif after_work_condition == AfterWorkOption.SWARM_MANAGER:
+            groupchat.select_speaker_auto_llm_config = last_speaker.llm_config
+            _update_groupchat_selection_message(
+                groupchat, last_speaker._context_variables, after_work_next_agent_selection_msg
+            )
             return "auto"
     else:
         raise ValueError("Invalid After Work condition or return value from callable")
@@ -681,6 +729,7 @@ def register_hand_off(
                 transit.agent, (AfterWorkOption, ConversableAgent, str, Callable)
             ), "Invalid After Work value"
             agent._swarm_after_work = transit
+            agent._swarm_after_work_selection_msg = transit.next_agent_selection_msg
         elif isinstance(transit, OnCondition):
 
             if isinstance(transit.target, ConversableAgent):
