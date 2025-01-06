@@ -76,6 +76,7 @@ class AfterWork:
     """
 
     agent: Union[AfterWorkOption, ConversableAgent, str, Callable]
+    next_agent_selection_msg: Optional[Union[str, Callable, UpdateCondition]] = None
 
     def __post_init__(self):
         if isinstance(self.agent, str):
