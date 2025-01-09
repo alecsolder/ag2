@@ -17,17 +17,6 @@ from autogen.agentchat.contrib.swarm_agent import (
     AFTER_WORK, AfterWorkOption, SwarmAgent, SwarmResult, initiate_swarm_chat
 )
 
-
-
-
-
-# Technical notes
-# This does "bubble up" the effects of a function returning a SwarmResult to route the next message. Even though the functions are run by a sub-swarm
-# it doesn't yet have the ability to do that via the invocation function however (but it can be added)
-# 
-# This does pass through the context_variables reference to the sub-swarm have modification by functions still work
-# 
-# This does
 class KnowledgeGeneratingSwarmAgent(KnowledgeSharingSwarmAgent):
     def __init__(
         self,
