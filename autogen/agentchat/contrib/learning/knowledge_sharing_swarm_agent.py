@@ -1,6 +1,6 @@
 from typing import Dict, List, Optional, Union
 from autogen.agentchat.agent import Agent
-from autogen.agentchat.contrib.learning.learning_models import KnowledgeModel, ResultModel
+from autogen.agentchat.contrib.learning.knowledge_models import KnowledgeModel, ResultModel
 from autogen.agentchat.contrib.swarm_agent import SwarmAgent
 
 

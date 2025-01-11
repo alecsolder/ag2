@@ -1,7 +1,7 @@
 import os
 import duckdb
 from autogen.agentchat.contrib.learning.knowledge_sharing_swarm_agent import KnowledgeSharingSwarmAgent
-from autogen.agentchat.contrib.learning.scientist import KnowledgeGeneratingSwarmAgent
+from autogen.agentchat.contrib.learning.knowledge_generating_swarm_agent import KnowledgeGeneratingSwarmAgent
 from autogen.agentchat.contrib.swarm_agent import AFTER_WORK, SwarmAgent, initiate_swarm_chat
 from autogen.agentchat.user_proxy_agent import UserProxyAgent
 
@@ -87,6 +87,7 @@ queryer.register_hand_off(AFTER_WORK(reasoner))
 chat_result, final_context_variables, last_active_agent = initiate_swarm_chat(
     initial_agent=reasoner,
     agents=[queryer, user, reasoner],
+    # This is intentionally being very vague and not at all related to writing sql queries
     messages="What conditions are correct to catch a golden trout?",
     context_variables={}  # Initialize with an empty context
 )

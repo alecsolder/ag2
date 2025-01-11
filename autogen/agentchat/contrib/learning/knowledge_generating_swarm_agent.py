@@ -373,8 +373,21 @@ class FunctionWithNotes:
 # TODO Have finding generation run after each tool call or figure out how to structure a really good prompt
 # TODO Introduce a separate step before the researcher to filter down the knowledge
 # TODO So thinking about how to implement Tree of Thought but for swarms, I think you pull out the concept of sub-swarms from this and make it a more native thing, and thene this could use it. Just a note, needs lots of thinking through 
+# TODO Make it so you can pass in structured output for the result value
+# TODO Maybe it is better to just have the note taker evaluate functions and responses
+# TODO Maybe it is better to have the findings thing run every single time
 
- 
+
+
+############## NEW GENERAL IDEAS ##############
+# For all successful function calls, store them in a graph database or RAG database to be looked up after?
+# Maybe they're associated with the question its given?
+# All findings get associated with the original query its asking for
+# As well as sub-things maybe?
+# TODO when I was using claude, I had a really cool aha moment where a random finding from a step
+# I asked asked it to find when X thing happened in the timeseries dataset, and it gave me a secondary interesting observation at the same time.
+###############################################
+
 # TODO I need a lot of help with prompting, I'm not familiar with how to do good generic prompting, and really only have experience with claude sonnet. 
 # so be warned that these are ugly
 def get_researcher_prompt(question, knowledge_text) -> str:
