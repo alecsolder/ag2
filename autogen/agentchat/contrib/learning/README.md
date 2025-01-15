@@ -1,8 +1,6 @@
 ## Intro
 There is a notebook which shows this off: swarms_as_code.ipynb and swarms_as_code_empty.ipynb (use the empty one unless you want to see my logs)
 
-This notebook is going to show off all the different features added as part of this PR.
-
 The idea for this came from the fact that I wanted to leverage the swarm-loop debugging functionality
 but there was a lot to be desired in the "orchestration" of these swarm-loop debugging efforts.
 I'm sure someone can make a model strategize and orchestrate big complicated swarms though.
