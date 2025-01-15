@@ -1,4 +1,5 @@
 ## Intro
+There is a notebook which shows this off: swarms_as_code.ipynb and swarms_as_code_empty.ipynb (use the empty one unless you want to see my logs)
 
 This notebook is going to show off all the different features added as part of this PR.
 
