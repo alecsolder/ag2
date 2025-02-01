@@ -1,0 +1,68 @@
+[
+    {
+        "question": "You are an investigator better than Sherlock Holmes. Can you figure out who the murderer is?",
+        "context": [
+            [
+                "The Red Carpet After-Party",
+                [
+                    "A luxurious film festival after-party in Cannes turned grim when the body of noted producer Martin Gill was discovered near the hotel’s rooftop pool.",
+                    "Beyoncé, dressed in a sleek black gown, spotted him first.",
+                    "She murmured, \"I don’t think he’s breathing,\" her voice taut with alarm.",
+                    "The star-studded gathering had been a celebratory affair until that chilling moment plunged everyone into disarray."
+                ]
+            ],
+            [
+                "Four High-Profile Attendees",
+                [
+                    "Four prominent celebrities had arrived early and interacted often with Martin:",
+                    "Timothée Chalamet, who had recently signed on for one of Martin’s projects.",
+                    "Cate Blanchett, eyeing a major role that Martin was producing.",
+                    "Chris Evans, an old friend rumored to be at odds with Martin over a contract dispute.",
+                    "Beyoncé, who had been discussing potential soundtrack collaborations for an upcoming film.",
+                    "All four had reasons to be near Martin that evening, and each was visibly shaken by the discovery."
+                ]
+            ],
+            [
+                "Clues on the Rooftop",
+                [
+                    "Initial observations revealed Martin’s phone lying unlocked on a lounge chair—open to a series of urgent text messages about a breach of contract.",
+                    "A slim gold watch found near his hand had stopped at exactly 11:09 p.m., and scuff marks on the pool deck indicated some kind of brief struggle.",
+                    "Staff members recalled hearing raised voices minutes before Martin was found, though no one got a clear look at who was involved.",
+                    "Chris Evans admitted, \"We did have words tonight, but it wasn’t anything serious.\"",
+                    "Meanwhile, Cate Blanchett insisted she hadn’t left the party hall, saying, \"I spent most of the evening discussing future scripts.\""
+                ]
+            ],
+            [
+                "One Suspect Cleared",
+                [
+                    "Halfway through the night, a key witness stepped forward: a passing waiter who confirmed that Chris Evans was in the hotel’s café from 11:00 to 11:15, occupied in an intense conversation with a director.",
+                    "Security footage backed this up, conclusively placing Chris away from the rooftop pool at the probable time of death.",
+                    "Although many had speculated about Chris’s contentious business dealings with Martin, his alibi was airtight.",
+                    "With Chris cleared, attention shifted to the remaining three celebrities."
+                ]
+            ],
+            [
+                "Mounting Suspicion",
+                [
+                    "Investigators learned that just before Martin’s death, Timothée Chalamet had exchanged tense words with him regarding a late script revision.",
+                    "\"I was frustrated, but I walked away,\" Timothée explained, looking genuinely upset.",
+                    "However, the gold watch found by the body was the kind Timothée was known to wear, though he claimed he had \"misplaced\" his earlier.",
+                    "Beyoncé’s reaction seemed overshadowed by shock; her only statement was, \"I offered him a chance to collaborate again, but we didn’t discuss anything contentious.\"",
+                    "Kate, on the other hand, changed her story slightly, saying she had \"stepped out for some air\" but returned before 11:00."
+                ]
+            ],
+            [
+                "Unraveling Contradictions",
+                [
+                    "Forensics specialists uncovered partial footprints on the wet pool deck corresponding to a smaller shoe size.",
+                    "Timothée’s shoes were soaked, although he insisted he had \"accidentally splashed water\" when leaning over the railing.",
+                    "Strands of Cate’s hair were found on Martin’s jacket, suggesting close contact that contradicted her claim of not leaving the party hall until well before 11:00.",
+                    "Beyoncé, who maintained she was indoors, had no visible water on her shoes or gown, but the staff found her phone case under a lounge chair by the pool, raising questions about whether she had indeed stepped outside."
+                ]
+            ]
+        ],
+        "answer": "You'll find out!",
+        "_id": "5ac15df95542994d76dccded",
+        "type": "bridge"
+    }
+]
