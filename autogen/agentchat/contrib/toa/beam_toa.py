@@ -36,8 +36,7 @@ from autogen.tools.dependency_injection import Field as AG2Field
 
 key_map = {"gpt-4o-mini": "OPENAI_API_KEY"}
 
-config_list = autogen.config_list_from_json(
-    env_or_file="/workspaces/ag2/OAI_CONFIG_LIST")
+config_list = autogen.config_list_from_json(env_or_file="/workspaces/ag2/OAI_CONFIG_LIST")
 
 local_llm_config = {
     "config_list": [
@@ -60,8 +59,7 @@ openai_llm_config = {
 def answer_question(
     context_variables: dict,
     answer: Annotated[
-        str, AG2Field(
-            description="The answer to the question created strictly from facts presented to you")
+        str, AG2Field(description="The answer to the question created strictly from facts presented to you")
     ],
     answer_justification: Annotated[
         str,
@@ -199,8 +197,7 @@ Grade Justification:
     return (grade, grade_justification), res_str
 
 
-test_case_json = json.load(
-    open("/workspaces/ag2/autogen/agentchat/contrib/toa/test_case.json", "r"))
+test_case_json = json.load(open("/workspaces/ag2/autogen/agentchat/contrib/toa/test_case.json", "r"))
 
 test_case = test_case_json[0]
 question = test_case["question"]
@@ -280,8 +277,7 @@ level_num = 0
 while level_num < 3 or int(confidence) < 90:
     level_num += 1
     log(f"############# Beginning Level {str(level_num)} ##################")
-    sub_questions, sub_questions_memory = questioner.auto_gen_func(
-        user_input=f"""Question: {f_text(question)}""")
+    sub_questions, sub_questions_memory = questioner.auto_gen_func(user_input=f"""Question: {f_text(question)}""")
 
     log_sub_questions(sub_questions)
 
@@ -302,24 +298,19 @@ while level_num < 3 or int(confidence) < 90:
             sentence_num = 0
             for sentence_agent in sentence_agents:
                 sentence_num += 1
-                fact, fact_memory = sentence_agent.auto_gen_func(
-                    user_input=sub_question)
+                fact, fact_memory = sentence_agent.auto_gen_func(user_input=sub_question)
 
                 grade_res = None
                 grade = 0
                 grade_justification = ""
                 if "irrelevant" in fact.lower():
-                    log(f"{sentence_num}: is irrelevant to the question.",
-                        prefix=pre, indent_num=3)
+                    log(f"{sentence_num}: is irrelevant to the question.", prefix=pre, indent_num=3)
                 elif "repeat" in fact.lower():
-                    log(f"{sentence_num}: is a repeat of an existing fact.",
-                        prefix=pre, indent_num=3)
+                    log(f"{sentence_num}: is a repeat of an existing fact.", prefix=pre, indent_num=3)
                 else:
                     q = f"New Fact:\n{fact}\nQuestion:\n{sub_question}"
-                    (grade, grade_justification), _ = paragraph_agent.auto_gen_func(
-                        user_input=q)
-                    sentence_result = (
-                        grade, grade_justification, fact, fact_memory, sentence_agent, paragraph_name)
+                    (grade, grade_justification), _ = paragraph_agent.auto_gen_func(user_input=q)
+                    sentence_result = (grade, grade_justification, fact, fact_memory, sentence_agent, paragraph_name)
                     log_sentence_result(sentence_result, pre, 3)
 
                     sentence_results.append(sentence_result)
@@ -328,8 +319,7 @@ while level_num < 3 or int(confidence) < 90:
             for grade, grade_justification, fact, fact_memory, sentence_agent, paragraph_name in all_sentence_results:
                 if int(grade) >= 50:
                     facts_to_keep.append(
-                        (grade, grade_justification, fact,
-                         fact_memory, sentence_agent, paragraph_name)
+                        (grade, grade_justification, fact, fact_memory, sentence_agent, paragraph_name)
                     )
 
         for (
@@ -341,8 +331,7 @@ while level_num < 3 or int(confidence) < 90:
             best_paragraph_name,
         ) in facts_to_keep:
             best_fact_sentence_agent.remember(best_fact_res)
-        (answer, answer_justification), _ = answerer.auto_gen_func(
-            user_input=question)
+        (answer, answer_justification), _ = answerer.auto_gen_func(user_input=question)
         (confidence, confidence_justification), _ = answer_verifier.auto_gen_func(
             user_input=f"""
 Question:

@@ -69,8 +69,7 @@ def log(msg, prefix="", indent_num=0):
 
 
 def log_sentence_result(sentence_result, prefix, indent):
-    (grade, grade_justification, fact, fact_memory,
-     sentence_agent, paragraph_name) = sentence_result
+    (grade, grade_justification, fact, fact_memory, sentence_agent, paragraph_name) = sentence_result
 
     log("Fact:", prefix, indent)
     log(f_text(fact, indent + 2), prefix, indent + 1)
@@ -126,8 +125,7 @@ class Level(BaseModel):
 
         if log_sentence_stuff:
             for i in range(len(self.sentence_results)):
-                log_sentence_result(
-                    self.sentence_results[i], self.level_num, index + 2)
+                log_sentence_result(self.sentence_results[i], self.level_num, index + 2)
 
 
 def log_beam_answer(beam_answer, title="Level "):

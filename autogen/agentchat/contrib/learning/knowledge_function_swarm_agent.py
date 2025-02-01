@@ -61,8 +61,7 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
 
         self._result_validator = SwarmAgent(
             name="ResultValidator-" + name,
-            llm_config=_configure_structured_output(
-                result_validator_llm_config, ValidationResult),
+            llm_config=_configure_structured_output(result_validator_llm_config, ValidationResult),
             silent=silent,
         )
 
@@ -74,8 +73,7 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
         )
         self._original_function = functions[0]
         self._functions: list[SubSwarmFunctionWrapper] = [
-            SubSwarmFunctionWrapper(
-                function, self._function_response_callback, self._result_validator)
+            SubSwarmFunctionWrapper(function, self._function_response_callback, self._result_validator)
             for function in functions
         ]
         self._wrapped_function = self._functions[0]
@@ -86,8 +84,7 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
             name="Researcher-" + name, llm_config=researcher_llm_config, functions=self._functions, silent=silent
         )
         self._researcher.register_hand_off(AFTER_WORK(self._researcher))
-        self._researcher.register_hook(
-            hookable_method="process_message_before_send", hook=self._ensure_function_call)
+        self._researcher.register_hook(hookable_method="process_message_before_send", hook=self._ensure_function_call)
         # self._researcher.register_hook(
         #     hookable_method="process_all_messages_before_reply", hook=self._remove_failed_tool_calls
         # )
@@ -95,8 +92,7 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
     def _only_previous_function_results_hook(self, messages: list[dict]) -> list[dict]:
         function_results = _get_last_non_empty_message(messages)
 
-        function_result_message = {"role": "user",
-                                   "name": "_User", "content": function_results}
+        function_result_message = {"role": "user", "name": "_User", "content": function_results}
 
         return self.get_function_memories_as_messages_recursive() + [function_result_message]
 
@@ -118,18 +114,14 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
     def _result_validator_structured_output_hook(
         self, sender: Agent, message: Union[dict, str], recipient: SwarmAgent, silent: bool
     ) -> Union[dict, str]:
-        message_text = message if isinstance(
-            message, str) else message.get("content", message)
+        message_text = message if isinstance(message, str) else message.get("content", message)
 
-        validation_result: ValidationResult = ValidationResult.model_validate_json(
-            message_text)
+        validation_result: ValidationResult = ValidationResult.model_validate_json(message_text)
         self._pending_validation_result = validation_result
         if validation_result.validation_result:
-            self._result_validator.register_hand_off(
-                AFTER_WORK(AfterWorkOption.TERMINATE))
+            self._result_validator.register_hand_off(AFTER_WORK(AfterWorkOption.TERMINATE))
         else:
-            self._result_validator.register_hand_off(
-                AFTER_WORK(self._researcher))
+            self._result_validator.register_hand_off(AFTER_WORK(self._researcher))
         return str(validation_result)
 
     def _ensure_function_call(
@@ -201,8 +193,7 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
         )
 
         self._result_validator.update_system_message(
-            get_result_validator_prompt(
-                user_input, self._validator_system_message)
+            get_result_validator_prompt(user_input, self._validator_system_message)
         )
 
 
@@ -217,8 +208,7 @@ class SubSwarmFunctionWrapper:
         self.num_invocations += 1
         try:
             # Call the tool function
-            (result_data, result_str) = self.tool_function(
-                context_variables=context_variables, *args, **kwargs)
+            (result_data, result_str) = self.tool_function(context_variables=context_variables, *args, **kwargs)
             function_response: FunctionResponse = FunctionResponse(
                 function=self.tool_function,
                 hypothesis=hypothesis,
@@ -270,8 +260,7 @@ class SubSwarmFunctionWrapper:
         )
 
         # Insert the new parameters before args/kwargs
-        params = [p for p in params if p.name not in (
-            "context_variables", "hypothesis")] + [hypothesis_param]
+        params = [p for p in params if p.name not in ("context_variables", "hypothesis")] + [hypothesis_param]
 
         # Return the updated signature
         return Signature(parameters=params, return_annotation=str)
