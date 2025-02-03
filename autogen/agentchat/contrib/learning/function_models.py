@@ -67,7 +67,7 @@ class Memory(BaseModel):
         return self.to_memory_message()
 
     # TODO lazy code for Fact: here
-    def to_memory_message(self, role="assistant", name="memory", prefix="Memory Fact: "):
+    def to_memory_message(self, role="user", name="memory", prefix="Memory Fact: "):
         return {
             "role": role,
             "name": name,
