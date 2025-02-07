@@ -2,29 +2,31 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+from asyncio import iscoroutinefunction
+import asyncio
 import copy
 from inspect import Parameter, Signature, signature
 from typing import Annotated, Any, Callable, List, Optional, Tuple, Union
 
 from autogen.agentchat.agent import Agent
-from autogen.agentchat.contrib.learning.function_models import (
+from autogen.agentchat.contrib.deep_research.function_models import (
     HYPOTHESIS_DEF,
     FunctionResponse,
     Memory,
     ValidationResult,
 )
-from autogen.agentchat.contrib.learning.knowledge_sharing_swarm_agent import KnowledgeSharingSwarmAgent
 from autogen.agentchat.contrib.swarm_agent import (
     AFTER_WORK,
     AfterWorkOption,
     SwarmAgent,
     SwarmResult,
     initiate_swarm_chat,
+    register_hand_off
 )
 from autogen.tools.dependency_injection import Field as AG2Field
 
 
-class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
+class ReliableFunctionSwarm(SwarmAgent):
     def __init__(
         self,
         name: str,
@@ -45,8 +47,6 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
             name=name,
             llm_config=None,  # None for now, it shouldn't do LLM things
             system_message="",
-            knowledge_sources=knowledge_sources,
-            use_own_knowledge=use_own_knowledge,
             silent=silent,
             **kwargs,
         )
@@ -83,7 +83,7 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
         self._researcher = SwarmAgent(
             name="Researcher-" + name, llm_config=researcher_llm_config, functions=self._functions, silent=silent
         )
-        self._researcher.register_hand_off(AFTER_WORK(self._researcher))
+        register_hand_off(self._researcher, AFTER_WORK(self._researcher))
         self._researcher.register_hook(hookable_method="process_message_before_send", hook=self._ensure_function_call)
         # self._researcher.register_hook(
         #     hookable_method="process_all_messages_before_reply", hook=self._remove_failed_tool_calls
@@ -94,7 +94,7 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
 
         function_result_message = {"role": "user", "name": "_User", "content": function_results}
 
-        return self.get_function_memories_as_messages_recursive() + [function_result_message]
+        return self._invoked_messages + [function_result_message]
 
     def _remove_failed_tool_calls(self, messages: list[dict]) -> list[dict]:
         if len(messages) <= 2:
@@ -119,9 +119,9 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
         validation_result: ValidationResult = ValidationResult.model_validate_json(message_text)
         self._pending_validation_result = validation_result
         if validation_result.validation_result:
-            self._result_validator.register_hand_off(AFTER_WORK(AfterWorkOption.TERMINATE))
+            register_hand_off(self._result_validator, AFTER_WORK(AfterWorkOption.TERMINATE))
         else:
-            self._result_validator.register_hand_off(AFTER_WORK(self._researcher))
+            register_hand_off(self._result_validator, AFTER_WORK(self._researcher))
         return str(validation_result)
 
     def _ensure_function_call(
@@ -142,21 +142,21 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
         return function_response.to_response_str(self._pending_user_input)
 
     def _get_messages(self, user_input):
-        messages = self.get_function_memories_as_messages_recursive() + [
+        return [
             {
                 "role": "user",
                 # "name": "user",
                 "content": user_input,
             }
         ]
-        return messages
 
     # Maybe figure out a way to do currying or dependency injection to provide stuff as default more easily.
-    def auto_gen_func(self, user_input: str, context_variables: dict = {}) -> Tuple[Any, Memory]:
+    def auto_gen_func(self, user_input: str, messages: list[dict] = [], context_variables: dict = {}) -> Tuple[Any, Memory]:
         self._wrapped_function.num_invocations = 0
         self._pending_function_response: FunctionResponse = None
         self._pending_validation_result = None
         self._pending_user_input = user_input
+        self._invoked_messages = messages
         # Must use findings and also must be run before every invocation
         self._update_prompts(user_input)
 
@@ -164,7 +164,7 @@ class KnowledgeFunctionSwarmAgent(KnowledgeSharingSwarmAgent):
             initial_agent=self._researcher,
             agents=[self._researcher, self._result_validator, self._memory],
             # Trying out passing the memories in as messages
-            messages=self._get_messages(user_input),
+            messages=messages + self._get_messages(user_input),
             max_rounds=self.max_rounds,
             # I think this works as a reference everywhere basically
             context_variables=context_variables,
@@ -208,7 +208,12 @@ class SubSwarmFunctionWrapper:
         self.num_invocations += 1
         try:
             # Call the tool function
-            (result_data, result_str) = self.tool_function(context_variables=context_variables, *args, **kwargs)
+            if iscoroutinefunction(self.tool_function):
+                # Await the async tool function
+                result_data, result_str = asyncio.run( self.tool_function(context_variables=context_variables, *args, **kwargs))
+            else:
+                # Call the sync tool function directly
+                result_data, result_str = self.tool_function(context_variables=context_variables, *args, **kwargs)
             function_response: FunctionResponse = FunctionResponse(
                 function=self.tool_function,
                 hypothesis=hypothesis,

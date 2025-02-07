@@ -46,50 +46,66 @@ If all three sub_questions meet these conditions, they are valid.
 Otherwise, reject or adjust them accordingly.
 """
 
-SENTENCE_AGENT_PROMPT = """
+SURFER_PROMPT = """
+You are a web surfer agent responsible for gathering information from the web to answer the provided question.
+
+Call browse and define a task for a web browsing agent which will provide information to answer the question. 
+"""
+
+SURFER_PROMPT = """
+You are a web surfer agent responsible for gathering information from the web to answer the provided question.
+
+Call browse and define a task for a web browsing agent which will provide information to answer the question. 
+"""
+
+SURFER_PROMPT = """
+You are a web surfer agent responsible for gathering information from the web to answer the provided question.
+
+Call browse and define a task for a web browsing agent which will provide information to answer the question. 
+"""
+
+SURFER_VALIDATOR_PROMPT = """
+Validations:
+1. Valdiate the the information contained within the result would be beneficial to answering the question
+"""
+
+FACT_EXTRACTOR_PROMPT = """
 Think step by step.
 
-You are an agent analyzing a single sentence in the context of the user question.
+You are an agent analyzing Research Results in the context of the user question.
 
 Your task:
-1. Determine if this sentence is relevant to the user question.
-2. A sentence is IRRELEVANT if a fact derived from that sentence is not in any way useful to the question. If the sentence is IRRELEVANT, invoke the function with the fact exactly set to: "IRRELEVANT".
-3. If the fact you want to save for the sentence already exists as a Memory Fact, record a fact exactly as "REPEAT".
-4. Otherwise, extract exactly ONE fact from it, preserving the sentence's original meaning.
+1. Determine if this Research Results is relevant to the user question.
+2. Research Results are IRRELEVANT if a fact derived from that Research Result is not in any way useful to the question. If the Research Result is IRRELEVANT, invoke the function with the fact exactly set to: "IRRELEVANT".
+3. If the fact you want to save for the Research Result already exists as a Memory Fact, record a fact exactly as "REPEAT".
+4. Otherwise, extract exactly ONE fact from it, preserving the Research Result's original meaning.
    - The fact must be a complete sentence with the same or extremely close wording.
    - Avoid synonyms or re-interpretations that change meaning.
    - Replace pronouns with the correct noun (if the reference is clearly established in the same sentence).
    - Maintain perspective of facts, if X person stated a fact, make sure to maintain that X person stated a fact.
 
 Finally, call record_fact with your extracted fact or the special tokens ("IRRELEVANT" / "REPEAT") if appropriate.
-
-Sentence:
-%s
 """
 
-SENTENCE_VALIDATOR_PROMPT = """
+FACT_EXTRACTOR_VALIDATOR_PROMPT = """
 Think step by step.
-
-Sentence:
-%s
 
 Validations:
 1. If the fact is "IRRELEVANT" or "REPEAT", do not perform any other validations; it is valid as is.
 2. Otherwise, ensure:
    - The fact is presented as a standalone statement, without relying on external context or missing antecedents.
-   - The fact does not invent details beyond what is stated in the sentence.
-   - The fact preserves the original meaning and wording of the sentence as closely as possible.
+   - The fact does not invent details beyond what is stated in the Research Results.
+   - The fact preserves the original meaning and wording of the Research Results as closely as possible.
    - The fact is directly relevant to the user question.
    - The fact is not already present in Fact Memory (if it is, you should have returned "REPEAT").
 """
 
-PARAGRAPH_AGENT_PROMPT = """
+FACT_GRADER_PROMPT = """
 Think step by step.
 
 You are an agent responsible for grading a New Fact in the context of:
 1. The main Question.
-2. The paragraph from which this fact was derived.
-3. Additional facts already in memory.
+2. Additional facts already in memory.
 
 Task:
 - Assess how relevant and critical this New Fact is to answering the main Question.
@@ -97,7 +113,7 @@ Task:
 - Provide a concise justification for your chosen grade.
 
 Grades:
-10   = Incorrect or inaccurate in the context of the paragraph
+10   = Incorrect or inaccurate in the context of the Fact Memory
 20   = Repeats an existing and irrelevant fact
 30   = Repeats an existing and relevant fact
 40   = Is vaguely related to the topics in the question
@@ -110,12 +126,9 @@ Grades:
 
 Finally:
 - Invoke the function grade_fact with your numeric grade and a clear, factual justification.
-
-Paragraph:
-%s
 """
 
-PARAGRAPH_VALIDATOR_PROMPT = """
+FACT_GRADER_VALIDATOR_PROMPT = """
 Think step by step.
 
 You will receive:
@@ -127,7 +140,7 @@ Validations:
 2. The justification must be clear and must tie back to how the fact relates to the question.
 3. If the fact is irrelevant, repeated, or incorrect, a low grade (0 or 25) is appropriate.
 4. If the fact is critical or completes the answer, a higher grade (80 or 100) may be used.
-5. Ensure the justification is logically consistent with the paragraph and the main question.
+5. Ensure the justification is logically consistent with the Memory Facts and the main question.
 """
 
 
