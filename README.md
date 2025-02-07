@@ -8,47 +8,45 @@ See [here](https://github.com/ag2ai/ag2/blob/main/notebook/contributing.md#how-t
 
 ## Build documentation locally
 
-1. To build and test documentation locally, first install [Node.js](https://nodejs.org/en/download/). For example,
+Follow these steps to build and serve the documentation on your local machine:
 
-```bash
-nvm install --lts
-```
+1. Install Node.js:
+    - Download and install [Node.js](https://nodejs.org/en/download/)
 
-Then, install the required packages by running the following commands:
+2.  Install Quarto:
+    - Visit the Quarto download [page](https://quarto.org/docs/download/).
+    - Click on the Pre-release tab and download the latest version of Quarto.
+    - Ensure you install version `1.5.23` or higher.
 
-```bash
-pip install pydoc-markdown pyyaml termcolor nbclient
-```
+3. Install Required Python Packages:
+    - From the project root directory, install the necessary Python packages by running:
 
-2. You also need to install quarto. Please click on the `Pre-release` tab from [this website](https://quarto.org/docs/download/) to download the latest version of `quarto` and install it. Ensure that the `quarto` version is `1.5.23` or higher.
+    ```console
+    pip install -e ".[docs]"
+    ```
 
-3. Finally, run the following commands to build and serve the documentation:
+4. Build and Serve the Documentation:
 
-```console
-./scripts/docs_serve.sh
-```
+To build and serve the documentation locally, run the following command from the project root directory:
+
+    ```console
+    ./scripts/docs_serve.sh
+    ```
 
 The last command starts a local development server and opens up a browser window.
 Most changes are reflected live without having to restart the server.
 
-## Build with Docker
+## Build with Dev Containers
 
-To build and test documentation within a docker container, run the following commands from your project root directory:
+To build and test documentation using Dev Containers, open the project using [VSCode](https://code.visualstudio.com/), press `Ctrl+Shift+P` and select `Dev Containers: Reopen in Container`.
 
-```bash
-docker build -f .devcontainer/dev/Dockerfile -t ag2ai_dev_img https://github.com/ag2ai/ag2.git#main
-```
+This will open the project in a Dev Container with all the required dependencies installed.
 
-Then start the container like so, this will log you in and ensure that Docker port 3000 is mapped to port 8081 on your local machine:
-
-```bash
-docker run -it -p 8081:3000 -v $(pwd):/home/autogen/ag2 ag2ai_dev_img bash
-```
-
-Once at the CLI in Docker run the following commands:
+Open a terminal and run the following commands from the project root directory to build and serve the documentation:
 
 ```console
+pip install -e ".[docs]"
 ./scripts/docs_serve.sh
 ```
 
-Once done you should be able to access the documentation at `http://127.0.0.1:8081`
+Once done you should be able to access the documentation at `http://localhost:3000/`.

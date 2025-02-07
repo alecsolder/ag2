@@ -1,0 +1,460 @@
+---
+custom_edit_url: https://github.com/ag2ai/ag2/edit/main/notebook/agentchat_swarm_enhanced.ipynb
+description: Swarm Ochestration
+source_notebook: /notebook/agentchat_swarm_enhanced.ipynb
+tags:
+- orchestration
+- group chat
+- swarm
+title: Enhanced Swarm Orchestration with AG2
+---
+
+<a href="https://colab.research.google.com/github/ag2ai/ag2/blob/main/notebook/agentchat_swarm_enhanced.ipynb" class="colab-badge" target="_blank"><img noZoom src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" /></a>
+<a href="https://github.com/ag2ai/ag2/blob/main/notebook/agentchat_swarm_enhanced.ipynb" class="github-badge" target="_blank"><img noZoom src="https://img.shields.io/badge/Open%20on%20GitHub-grey?logo=github" alt="Open on GitHub" /></a>
+
+
+
+
+AG2’s swarm orchestration provides a flexible and powerful method of
+managing a conversation with multiple agents, tools, and transitions.
+
+In this notebook, we look at more advanced features of the swarm
+orchestration.
+
+If you are new to swarm, check out [this
+notebook](https://docs.ag2.ai/docs/use-cases/notebooks/notebooks/agentchat_swarm),
+where we introduce the core features of swarms including global context
+variables, hand offs, and initiating a swarm chat.
+
+In this notebook we’re going to demonstrate these features AG2’s swarm
+orchestration:
+
+-   Updating an agent’s state
+-   Conditional handoffs
+-   Nested chats
+
+
+<div class="note">
+<Note>
+This notebook has been updated as swarms can now accommodate any ConversableAgent.
+</Note>
+</div>
+
+
+
+<div class="info Requirements">
+<Info>
+Install `ag2`:
+```bash
+pip install ag2
+```
+
+> **Note:** If you have been using `autogen` or `pyautogen`, all you need to do is upgrade it using:  
+> ```bash
+> pip install -U autogen
+> ```
+> or  
+> ```bash
+> pip install -U pyautogen
+> ```
+> as `pyautogen`, `autogen`, and `ag2` are aliases for the same PyPI package.  
+
+
+For more information, please refer to the [installation guide](/docs/user-guide/basic-concepts/installing-ag2).
+</Info>
+</div>
+
+
+## Set your API Endpoint
+
+The
+[`config_list_from_json`](https://docs.ag2.ai/docs/api-reference/autogen/config_list_from_json#config-list-from-json)
+function loads a list of configurations from an environment variable or
+a json file.
+
+```python
+import autogen
+
+config_list = autogen.config_list_from_json(
+    "OAI_CONFIG_LIST",
+    filter_dict={
+        "model": ["gpt-4o"],
+    },
+)
+
+llm_config = {
+    "cache_seed": 42,  # change the cache_seed for different trials
+    "temperature": 1,
+    "config_list": config_list,
+    "timeout": 120,
+}
+```
+
+## Demonstration
+
+We’re creating this customer service workflow for an e-commerce
+platform. Customers can ask about the status of their orders, but they
+must be authenticated to do so.
+
+<figure>
+<img src="swarm_enhanced_01.png" alt="Swarm Enhanced Demonstration" />
+<figcaption aria-hidden="true">Swarm Enhanced Demonstration</figcaption>
+</figure>
+
+Key aspects of this swarm are:
+
+1.  System messages are customised, incorporating the context of the
+    workflow
+2.  Handoffs are conditional, only being available when they are
+    relevant
+3.  A nested chat handles the order retrieval and summarisation
+
+```python
+from typing import Any, Dict, List
+
+from autogen import (
+    AfterWork,
+    AfterWorkOption,
+    ConversableAgent,
+    OnCondition,
+    SwarmResult,
+    UpdateSystemMessage,
+    UserProxyAgent,
+    initiate_swarm_chat,
+    register_hand_off,
+)
+```
+
+### Context
+
+```python
+workflow_context = {
+    # customer details
+    "customer_name": None,
+    "logged_in_username": None,
+    # workflow status
+    "logged_in": False,
+    "requires_login": True,
+    # order enquiry details
+    "has_order_id": False,
+    "order_id": None,
+}
+```
+
+### Databases
+
+```python
+# Databases
+
+USER_DATABASE = {
+    "mark": {
+        "full_name": "Mark Sze",
+    },
+    "kevin": {
+        "full_name": "Yiran Wu",
+    },
+}
+
+ORDER_DATABASE = {
+    "TR13845": {
+        "user": "mark",
+        "order_number": "TR13845",
+        "status": "shipped",  # order status: order_received, shipped, delivered, return_started, returned
+        "return_status": "N/A",  # return status: N/A, return_started, return_shipped, return_delivered, refund_issued
+        "product": "matress",
+        "link": "https://www.example.com/TR13845",
+        "shipping_address": "123 Main St, State College, PA 12345",
+    },
+    "TR14234": {
+        "user": "kevin",
+        "order_number": "TR14234",
+        "status": "delivered",
+        "return_status": "N/A",
+        "product": "pillow",
+        "link": "https://www.example.com/TR14234",
+        "shipping_address": "123 Main St, State College, PA 12345",
+    },
+    "TR29384": {
+        "user": "mark",
+        "order_number": "TR29384",
+        "status": "delivered",
+        "return_status": "N/A",
+        "product": "bed frame",
+        "link": "https://www.example.com/TR29384",
+        "shipping_address": "123 Main St, State College, PA 12345",
+    },
+}
+```
+
+### Agent’s Functions
+
+```python
+# ORDER FUNCTIONS
+def check_order_id(order_id: str, context_variables: dict) -> SwarmResult:
+    """Check if the order ID is valid"""
+    # Restricts order to checking to the logged in user
+    if (
+        context_variables["logged_in_username"]
+        and order_id in ORDER_DATABASE
+        and ORDER_DATABASE[order_id]["user"] == context_variables["logged_in_username"]
+    ):
+        return SwarmResult(
+            context_variables=context_variables, values=f"Order ID {order_id} is valid.", agent=order_triage_agent
+        )
+    else:
+        return SwarmResult(
+            context_variables=context_variables,
+            values=f"Order ID {order_id} is invalid. Please ask for the correct order ID.",
+            agent=order_triage_agent,
+        )
+
+
+def record_order_id(order_id: str, context_variables: dict) -> SwarmResult:
+    """Record the order ID in the workflow context"""
+    if order_id not in ORDER_DATABASE:
+        return SwarmResult(
+            context_variables=context_variables,
+            values=f"Order ID {order_id} not found. Please ask for the correct order ID.",
+            agent=order_triage_agent,
+        )
+
+    context_variables["order_id"] = order_id
+    context_variables["has_order_id"] = True
+    return SwarmResult(
+        context_variables=context_variables, values=f"Order ID Recorded: {order_id}", agent=order_mgmt_agent
+    )
+
+
+# AUTHENTICATION FUNCTIONS
+def login_customer_by_username(username: str, context_variables: dict) -> SwarmResult:
+    """Get and log the customer in by their username"""
+    if username in USER_DATABASE:
+        context_variables["customer_name"] = USER_DATABASE[username]["full_name"]
+        context_variables["logged_in_username"] = username
+        context_variables["logged_in"] = True
+        context_variables["requires_login"] = False
+        return SwarmResult(
+            context_variables=context_variables,
+            values=f"Welcome back our customer, {context_variables['customer_name']}! Please continue helping them.",
+            agent=order_triage_agent,
+        )
+    else:
+        return SwarmResult(
+            context_variables=context_variables,
+            values=f"User {username} not found. Please ask for the correct username.",
+            agent=authentication_agent,
+        )
+```
+
+### Agents
+
+```python
+# AGENTS
+
+# Human customer
+user = UserProxyAgent(
+    name="customer",
+    code_execution_config=False,
+)
+
+order_triage_prompt = """You are an order triage agent, working with a customer and a group of agents to provide support for your e-commerce platform.
+
+An agent needs to be logged in to be able to access their order. The authentication_agent will work with the customer to verify their identity, transfer to them to start with.
+The order_mgmt_agent will manage all order related tasks, such as tracking orders, managing orders, etc. Be sure to check the order as one step. Then if it's valid you can record it in the context.
+
+Ask the customer for further information when necessary.
+
+The current status of this workflow is:
+Customer name: {customer_name}
+Logged in: {logged_in}
+Enquiring for Order ID: {order_id}
+"""
+
+order_triage_agent = ConversableAgent(
+    name="order_triage_agent",
+    update_agent_state_before_reply=[
+        UpdateSystemMessage(order_triage_prompt),
+    ],
+    functions=[check_order_id, record_order_id],
+    llm_config=llm_config,
+)
+
+authentication_prompt = "You are an authentication agent that verifies the identity of the customer."
+
+authentication_agent = ConversableAgent(
+    name="authentication_agent",
+    system_message=authentication_prompt,
+    functions=[login_customer_by_username],
+    llm_config=llm_config,
+)
+
+order_management_prompt = """You are an order management agent that manages inquiries related to e-commerce orders.
+
+The order must be logged in to access their order.
+
+Use your available tools to get the status of the details from the customer. Ask the customer questions as needed.
+
+The current status of this workflow is:
+Customer name: {customer_name}
+Logged in: {logged_in}
+Enquiring for Order ID: {order_id}
+"""
+
+order_mgmt_agent = ConversableAgent(
+    name="order_mgmt_agent",
+    update_agent_state_before_reply=[
+        UpdateSystemMessage(order_management_prompt),
+    ],
+    functions=[check_order_id, record_order_id],
+    llm_config=llm_config,
+)
+```
+
+### Nested Chats
+
+```python
+# NESTED CHAT - Delivery Status
+order_retrieval_agent = ConversableAgent(
+    name="order_retrieval_agent",
+    system_message="You are an order retrieval agent that gets details about an order.",
+    llm_config=llm_config,
+)
+
+order_summariser_agent = ConversableAgent(
+    name="order_summariser_agent",
+    system_message="You are an order summariser agent that provides a summary of the order details.",
+    llm_config=llm_config,
+)
+
+
+def extract_order_summary(recipient: ConversableAgent, messages, sender: ConversableAgent, config):
+    """Extracts the order summary based on the OrderID in the context variables"""
+    order_id = sender.get_context("order_id")
+    if order_id in ORDER_DATABASE:
+        order = ORDER_DATABASE[order_id]
+        return f"Order {order['order_number']} for {order['product']} is currently {order['status']}. The shipping address is {order['shipping_address']}."
+    else:
+        return f"Order {order_id} not found."
+
+
+nested_chat_one = {
+    "carryover_config": {"summary_method": "last_msg"},
+    "recipient": order_retrieval_agent,
+    "message": extract_order_summary,  # "Retrieve the status details of the order using the order id",
+    "max_turns": 1,
+}
+
+nested_chat_two = {
+    "recipient": order_summariser_agent,
+    "message": "Summarise the order details provided in a tabulated, text-based, order sheet format",
+    "max_turns": 1,
+    "summary_method": "last_msg",
+}
+
+chat_queue = [nested_chat_one, nested_chat_two]
+```
+
+### Handoffs (OnCondition and AfterWork)
+
+```python
+# HANDOFFS
+register_hand_off(
+    agent=order_triage_agent,
+    hand_to=[
+        OnCondition(
+            target=authentication_agent,
+            condition="The customer is not logged in, authenticate the customer.",
+            available="requires_login",
+        ),
+        OnCondition(
+            target=order_mgmt_agent,
+            condition="The customer is logged in, continue with the order triage.",
+            available="logged_in",
+        ),
+        AfterWork(AfterWorkOption.REVERT_TO_USER),
+    ],
+)
+
+register_hand_off(
+    agent=authentication_agent,
+    hand_to=[
+        OnCondition(
+            target=order_triage_agent,
+            condition="The customer is logged in, continue with the order triage.",
+            available="logged_in",
+        ),
+        AfterWork(AfterWorkOption.REVERT_TO_USER),
+    ],
+)
+
+
+def has_order_in_context(agent: ConversableAgent, messages: List[Dict[str, Any]]) -> bool:
+    return agent.get_context("has_order_id")
+
+
+register_hand_off(
+    agent=order_mgmt_agent,
+    hand_to=[
+        OnCondition(
+            target={
+                "chat_queue": chat_queue,
+            },
+            condition="Retrieve the status of the order",
+            available=has_order_in_context,
+        ),
+        OnCondition(
+            target=authentication_agent,
+            condition="The customer is not logged in, authenticate the customer.",
+            available="requires_login",
+        ),
+        OnCondition(target=order_triage_agent, condition="The customer has no more enquiries about this order."),
+        AfterWork(AfterWorkOption.REVERT_TO_USER),
+    ],
+)
+```
+
+### Let’s go!
+
+```python
+chat_history = initiate_swarm_chat(
+    initial_agent=order_triage_agent,
+    agents=[order_triage_agent, authentication_agent, order_mgmt_agent],
+    context_variables=workflow_context,
+    messages="Can you help me with my order.",
+    user_agent=user,
+    max_rounds=40,
+    after_work=AfterWorkOption.TERMINATE,
+)
+```
+
+# Controlling flow
+
+### When not logged in
+
+<figure>
+<img src="swarm_enhanced_02.png" alt="Swarm Enhanced Demonstration" />
+<figcaption aria-hidden="true">Swarm Enhanced Demonstration</figcaption>
+</figure>
+
+### When logged in but no order id
+
+<figure>
+<img src="swarm_enhanced_03.png" alt="Swarm Enhanced Demonstration" />
+<figcaption aria-hidden="true">Swarm Enhanced Demonstration</figcaption>
+</figure>
+
+### When logged in with order id
+
+<figure>
+<img src="swarm_enhanced_04.png" alt="Swarm Enhanced Demonstration" />
+<figcaption aria-hidden="true">Swarm Enhanced Demonstration</figcaption>
+</figure>
+
+# Agent state
+
+### Agent System Messages with context
+
+<figure>
+<img src="swarm_enhanced_05.png" alt="Swarm Enhanced Demonstration" />
+<figcaption aria-hidden="true">Swarm Enhanced Demonstration</figcaption>
+</figure>
