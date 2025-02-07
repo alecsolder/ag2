@@ -21,7 +21,7 @@
 | Tvrtko Sternak  | [sternakt](https://github.com/sternakt)               | airt.ai               | structured output |
 | Jiacheng Shang  | [Eric-Shang](https://github.com/Eric-Shang)               | Toast              | RAG |
 | Alec Solder  | [alecsolder](https://github.com/alecsolder)               | -                | swarms, reasoning, function calling |
-| Marc Willhaus | [willhama](https://github.com/willhama)               | -                | - |A
+| Marc Willhaus | [willhama](https://github.com/willhama)               | -                | - |
 
 **Pending Maintainers list (Marked with \*, Waiting for explicit approval from the maintainers)**
 | Name            | GitHub Handle                                              | Organization           | Features                                |
