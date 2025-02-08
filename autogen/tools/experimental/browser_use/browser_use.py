@@ -109,7 +109,8 @@ class BrowserUseTool(Tool):
     ) -> Any:
         if "config_list" not in llm_config:
             if "model" in llm_config:
-                return ChatOpenAI(model=llm_config["model"])
+                return ChatOpenAI(model=llm_config["model"], base_url=llm_config["base_url"])
+                # return ChatOllama(model=llm_config["model"], base_url=llm_config["base_url"])
             raise ValueError("llm_config must be a valid config dictionary.")
 
         try:

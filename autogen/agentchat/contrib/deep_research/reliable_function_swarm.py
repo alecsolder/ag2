@@ -1,6 +1,7 @@
 # Copyright (c) 2023 - 2024, Owners of https://github.com/ag2ai
 #
 # SPDX-License-Identifier: Apache-2.0
+import traceback
 
 from asyncio import iscoroutinefunction
 import asyncio
@@ -237,6 +238,8 @@ class SubSwarmFunctionWrapper:
             )
         except Exception as e:
             # Capture the exception and debug it, not sure if I need to do this actually?
+            
+            print(traceback.format_exc())
             return f"""There was an issue with your tool call. You must strictly adhere to the schema in the function specification.
             Error:
             {str(e)}"""

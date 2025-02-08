@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 from typing import Annotated
+import os
+os.environ["ANONYMIZED_TELEMETRY"] = "false"
 
 import autogen
 from autogen.agentchat.contrib.deep_research.prompts import ANSWER_VERIFIER_PROMPT, ANSWER_VERIFIER_VALIDATOR_PROMPT, ANSWERER_PROMPT, ANSWERER_VALIDATOR_PROMPT, QUESTIONER_PROMPT, QUESTIONER_VALIDATOR_PROMPT
@@ -25,27 +27,40 @@ config_list = autogen.config_list_from_json(
 
 TASK_PROMPT = "You are a Deep Researcher. You are extremely inquisitive and are responsible for submitting questions to perform deep research on the internet to find out more about a topic. "
 
-# local_llm_config = {
-#     "config_list": [
-#         {
-#             "model": "qwen2.5-7b-instruct",
-#             "base_url": "http://192.168.0.169:1234/v1",
-#             "price" : [0.01, 0.01]
-#         },
-#     ],
-#     "cache_seed": None,
-# }
+local_llm_config = {
+    "config_list": [
+        {
+            "model": "qwen2.5-7b-instruct",
+            "base_url": "http://192.168.0.95:1234/v1",
+            "price" : [0.01, 0.01]
+        },
+    ],
+    "cache_seed": None,
+}
 
-# openai_llm_config = {
-#     "config_list": [
-#         {
-#             "model": "qwen2.5-7b-instruct",
-#             "base_url": "http://192.168.0.169:1234/v1",
-#             "price" : [0.01, 0.01]
-#         },
-#     ],
-#     "cache_seed": None,
-# }
+openai_llm_config = {
+    "config_list": [
+        {
+            "model": "qwen2.5-7b-instruct",
+            "base_url": "http://192.168.0.95:1234/v1",
+            "price" : [0.01, 0.01]
+        },
+    ],
+    "cache_seed": None,
+}
+
+surfer_config = {
+            "model": "qwen2.5-vl-3b-instruct",
+            "base_url": "http://192.168.0.95:1234/v1",
+            "price" : [0.01, 0.01]
+        }
+
+surfer_config =  {
+    # "cache_seed": 42,
+    "temperature": 1,
+    "config_list": config_list,
+    "timeout": 120,
+}
 
 local_llm_config = {
     # "cache_seed": 42,
@@ -159,7 +174,7 @@ async def browse(
     """
 
     browser_use_tool = BrowserUseTool(
-        llm_config=openai_llm_config,
+        llm_config=surfer_config,
         browser_config={"headless": False}
     )
     res: BrowserUseResult = await browser_use_tool(task)
@@ -177,8 +192,8 @@ Extracted Content:
     
 surfer = ReliableFunctionSwarm(
     name="Surfer",
-    researcher_llm_config=openai_llm_config,
-    result_validator_llm_config=openai_llm_config,
+    researcher_llm_config=local_llm_config,
+    result_validator_llm_config=local_llm_config,
     agent_system_message=SURFER_PROMPT,
     validator_system_message=SURFER_VALIDATOR_PROMPT,
     functions=[browse],
@@ -261,7 +276,8 @@ fact_grader = ReliableFunctionSwarm(
 confidence = 0
 # question = "In the endnote found in the second-to-last paragraph of page 11 of the book with the doi 10.2307/j.ctv9b2xdv, what date in November was the Wikipedia article accessed? Just give the day of the month."
 # question = "On a leap day before the year 2008, a joke was removed from the Wikipedia page for “Dragon”. What was the phrase that was removed? Give the phrase as it appeared on the page, but without punctuation."
-question = "How many more blocks (also denoted as layers) in BERT base encoder than the encoder from the architecture proposed in Attention is All You Need?"
+# question = "How many more blocks (also denoted as layers) in BERT base encoder than the encoder from the architecture proposed in Attention is All You Need?"
+question = "Give me a full history of morse code keys created by Gerhard Schurr. Provide every model he ever made, when they were made, and their attributes."
 test_case_actual_answer = "tbd"
 
 level_num = 0
