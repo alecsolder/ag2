@@ -1,41 +1,3 @@
-# # Demo of Reliable Function Swarm Agent with Crawl4AI
-# ## Installation
-# 
-# To get started with the `crawl4ai` integration in AG2, follow these steps:
-# 
-# 1. Install AG2 with the `crawl4ai` extra:
-#    ```bash
-#    pip install ag2[crawl4ai]
-#    ```
-#    > **Note:** If you have been using `autogen` or `pyautogen`, all you need to do is upgrade it using:  
-#    > ```bash
-#    > pip install -U autogen[crawl4ai]
-#    > ```
-#    > or  
-#    > ```bash
-#    > pip install -U pyautogen[crawl4ai]
-#    > ```
-#    > as `pyautogen`, `autogen`, and `ag2` are aliases for the same PyPI package.  
-# 2. Set up Playwright:
-#    
-#    ```bash
-#    # Installs Playwright and browsers for all OS
-#    playwright install
-#    # Additional command, mandatory for Linux only
-#    playwright install-deps
-#    ```
-# 
-# 3. For running the code in Jupyter, use `nest_asyncio` to allow nested event loops.
-#     ```bash
-#     pip install nest_asyncio
-#     ```
-# 
-# 
-# You're all set! Now you can start using browsing features in AG2.
-# 
-# 
-# ## Imports
-
 import os
 
 import nest_asyncio
@@ -71,7 +33,52 @@ Validations:
 2. Validate that there is in fact a title
 """)
 
-res = crawler.run_func(task="Extract all notebooks urls from https://docs.ag2.ai/docs/use-cases/notebooks/Notebooks")
+res = crawler.run_func(task="Extract 2 notebooks urls from https://docs.ag2.ai/docs/use-cases/notebooks/Notebooks")
 print(res)
 
 
+# # %%
+# import os
+
+# import nest_asyncio
+
+# from autogen.agentchat import UserProxyAgent
+# from autogen.agents.experimental import WebSurferAgent
+
+# nest_asyncio.apply()
+
+# # %% [markdown]
+# # ### Crawl4AI WebSurferAgent
+# # 
+# # > **Note:** [`Crawl4AI`](https://github.com/unclecode/crawl4ai) is built on top of [LiteLLM](https://github.com/BerriAI/litellm) and supports the same models as LiteLLM.
+# # >
+# # > We had great experience with `OpenAI`, `Anthropic`, `Gemini` and `Ollama`. However, as of this writing, `DeepSeek` is encountering some issues.
+# # 
+
+# # %%
+# config_list = [{"model": "gpt-4o-mini", "api_key": os.environ["OPENAI_API_KEY"]}]
+
+# llm_config = {
+#     "config_list": config_list,
+# }
+
+# # %% [markdown]
+# # There are two ways to start a chat session which is using only one agent with LLM configuration.
+# # 
+# # #### **Recommended:** Using the `run` Method
+# # 
+# # The new `run` method simplifies the process by eliminating the need for manual `UserProxyAgent` creation.
+# # 
+# # - ✅ **Easier setup** – No need to manually register tools
+# # 
+
+# # %%
+# # `web_tool` parameter must be set to `crawl4ai` in order for the `Crawl4AITool` to be used.
+# websurfer = WebSurferAgent(name="WebSurfer", llm_config=llm_config, web_tool="crawl4ai")
+
+# websurfer.run(
+#     message="Get info from https://docs.ag2.ai/docs/Home",
+#     tools=websurfer.tools,
+#     max_turns=2,
+#     user_input=False,
+# )

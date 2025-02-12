@@ -2071,10 +2071,12 @@ class ConversableAgent(LLMAgent):
                 try:
                     # get the running loop if it was already created
                     loop = asyncio.get_running_loop()
+                    print("LOOP IN TRY")
                     close_loop = False
                 except RuntimeError:
                     # create a loop if there is no running loop
                     loop = asyncio.new_event_loop()
+                    print("LOOP IN EXCEPT")
                     close_loop = True
 
                 _, func_return = loop.run_until_complete(self.a_execute_function(function_call, call_id=tool_call_id))
@@ -3003,7 +3005,7 @@ class ConversableAgent(LLMAgent):
             retval = await func(*args, **kwargs, **inject_params)
             if logging_enabled():
                 log_function_use(self, func, kwargs, retval)
-            return serialize_to_str(retval)
+            return retval
 
         wrapped_func = _a_wrapped_func if inspect.iscoroutinefunction(func) else _wrapped_func
 
