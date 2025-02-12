@@ -6,5 +6,6 @@ from .discord import DiscordAgent
 from .slack import SlackAgent
 from .telegram import TelegramAgent
 from .websurfer import WebSurferAgent
+from .reliable import ReliableFunctionAgent
 
-__all__ = ["DiscordAgent", "SlackAgent", "TelegramAgent", "WebSurferAgent"]
+__all__ = ["DiscordAgent", "SlackAgent", "TelegramAgent", "WebSurferAgent", "ReliableFunctionAgent"]
