@@ -318,7 +318,8 @@ def _process_initial_messages(
             elif user_agent and last_message["name"] == user_agent.name:
                 last_agent = user_agent
             else:
-                raise ValueError(f"Invalid swarm agent name in last message: {last_message['name']}")
+                pass
+                # raise ValueError(f"Invalid swarm agent name in last message: {last_message['name']}")
         else:
             last_agent = user_agent if user_agent else temp_user_proxy
 

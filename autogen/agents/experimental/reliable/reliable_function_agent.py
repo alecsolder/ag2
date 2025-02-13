@@ -9,7 +9,7 @@ from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Union
 
 from openai import BaseModel
 
-from autogen import ConversableAgent, a_initiate_swarm_chat
+from autogen import ConversableAgent
 from autogen.agentchat.agent import Agent
 from autogen.agentchat.contrib.swarm_agent import (
     AfterWork,
@@ -47,7 +47,10 @@ class ValidationResult(BaseModel):
 
 
 class ReliableFunctionContext(BaseModel):
-    task: Annotated[Optional[str], AG2Field(description="The task for this invocation of the agent.")]
+    task: Annotated[str, AG2Field(description="The task for this invocation of the agent.")]
+    reliable_agent_name: Annotated[
+        str, AG2Field(description="Name of the reliable agent which generated this context.")
+    ]
     result_data: Annotated[
         Optional[Any], AG2Field(description="The result of the function invocation as Any type.")
     ] = ""
@@ -76,6 +79,16 @@ Task:
 Result:
 {self.result_str}
 """
+
+    def to_message(self):
+        return {
+            "role": "assistant",
+            "name": self.reliable_agent_name,
+            "content": f"""Background Information:
+Task: {self.task}
+Result:
+{self.result_str}""",
+        }
 
 
 # TODO: context_variables usage
@@ -219,38 +232,12 @@ class ReliableFunctionAgent(ConversableAgent):
         # Maybe could do something smarter by using UpdateSystemMessage
         self._update_prompts(task)
         self._invoked_messages = messages
-        reliable_function_context = ReliableFunctionContext(task=task)
+        reliable_function_context = ReliableFunctionContext(task=task, reliable_agent_name=self.name)
         _set_reliable_function_context(context_variables, self._context_variables_key, reliable_function_context)
 
         _, final_context_variables, _ = initiate_swarm_chat(
             initial_agent=self._runner,
-            agents=[self._runner, self._validator],
-            messages=messages
-            + [
-                {
-                    "role": "user",
-                    "content": task,
-                }
-            ],
-            max_rounds=self.max_rounds,
-            context_variables=context_variables,
-        )
-
-        return _get_reliable_function_context(final_context_variables, self._context_variables_key)
-
-    async def a_run_func(
-        self, task: str, messages: list[dict] = [], context_variables: dict = {}
-    ) -> ReliableFunctionContext:
-        # Needed because we rely on prompt for the task, could move it in to messages and not have to do this
-        # Maybe could do something smarter by using UpdateSystemMessage
-        self._update_prompts(task)
-        self._invoked_messages = messages
-        reliable_function_context = ReliableFunctionContext(task=task)
-        _set_reliable_function_context(context_variables, self._context_variables_key, reliable_function_context)
-
-        _, final_context_variables, _ = await a_initiate_swarm_chat(
-            initial_agent=self._runner,
-            agents=[self._runner, self._validator],
+            agents=[self._runner, self._validator, self],
             messages=messages
             + [
                 {
