@@ -3,9 +3,9 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from .discord import DiscordAgent
+from .reliable import ReliableFunctionAgent
 from .slack import SlackAgent
 from .telegram import TelegramAgent
 from .websurfer import WebSurferAgent
-from .reliable import ReliableFunctionAgent
 
-__all__ = ["DiscordAgent", "SlackAgent", "TelegramAgent", "WebSurferAgent", "ReliableFunctionAgent"]
+__all__ = ["DiscordAgent", "ReliableFunctionAgent", "SlackAgent", "TelegramAgent", "WebSurferAgent"]

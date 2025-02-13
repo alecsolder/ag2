@@ -2,6 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import os
 from typing import Annotated, Any, Optional, Type
 
@@ -57,6 +58,18 @@ class Crawl4AITool(Tool):
                 response = result.markdown
             else:
                 response = result.extracted_content if result.success else result.error_message
+
+            if extraction_model:
+                data = json.loads(response)
+
+                # If data is a dict (ScrapeResult format)
+                if isinstance(data, dict):
+                    return extraction_model.model_validate(data), response
+
+                # If data is a list (List[Notebook] format)
+                elif isinstance(data, list):
+                    return [extraction_model(**item) for item in data], response
+                return extraction_model.model_validate_json(result.extracted_content), response
 
             return response
 

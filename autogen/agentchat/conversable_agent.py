@@ -2071,12 +2071,10 @@ class ConversableAgent(LLMAgent):
                 try:
                     # get the running loop if it was already created
                     loop = asyncio.get_running_loop()
-                    print("LOOP IN TRY")
                     close_loop = False
                 except RuntimeError:
                     # create a loop if there is no running loop
                     loop = asyncio.new_event_loop()
-                    print("LOOP IN EXCEPT")
                     close_loop = True
 
                 _, func_return = loop.run_until_complete(self.a_execute_function(function_call, call_id=tool_call_id))

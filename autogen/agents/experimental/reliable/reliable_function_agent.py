@@ -1,21 +1,15 @@
-
-# Copyright (c) 2023 - 2024, Owners of https://github.com/ag2ai
+# Copyright (c) 2023 - 2025, AG2ai, Inc., AG2ai open-source projects maintainers and core contributors
 #
 # SPDX-License-Identifier: Apache-2.0
-import functools
-import inspect
-import traceback
-
-from asyncio import iscoroutinefunction
 import asyncio
 import copy
-from inspect import Parameter, Signature, markcoroutinefunction, signature
+import functools
+import inspect
 from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Union
 
 from openai import BaseModel
 
 from autogen import ConversableAgent, a_initiate_swarm_chat
-from autogen.tools.tool import Tool
 from autogen.agentchat.agent import Agent
 from autogen.agentchat.contrib.swarm_agent import (
     AfterWork,
@@ -23,40 +17,52 @@ from autogen.agentchat.contrib.swarm_agent import (
     SwarmAgent,
     SwarmResult,
     initiate_swarm_chat,
-    register_hand_off
+    register_hand_off,
 )
 from autogen.tools.dependency_injection import Field as AG2Field
+from autogen.tools.tool import Tool
 
 HYPOTHESIS_DEF = "A hypothesis for the outcome of invoking this function."
 VALIDATION_RESULT_RESULT_DEF = (
     "Whether or not the result of the function invocation satisfies the specified Validations."
 )
 VALIDATION_RESULT_JUSTIFICATION_DEF = "Justification for validation_result decision."
-    
+
+
 # These models need some improvement, I still don't know how to properly
 # Set them up so they are ok in context_variables and structured output
 class ValidationResult(BaseModel):
-    validation_result: Annotated[bool, AG2Field(description=VALIDATION_RESULT_RESULT_DEF)] 
+    validation_result: Annotated[bool, AG2Field(description=VALIDATION_RESULT_RESULT_DEF)]
     justification: Annotated[str, AG2Field(description=VALIDATION_RESULT_JUSTIFICATION_DEF)]
+
     class Config:
         arbitrary_types_allowed = True
         extra = "forbid"
+
     def __str__(self) -> str:
         return (
             f"Validation Result: {'Passed' if self.validation_result else 'Failed'}\n"
             f"Justification: {self.justification}"
         )
-        
+
+
 class ReliableFunctionContext(BaseModel):
     task: Annotated[Optional[str], AG2Field(description="The task for this invocation of the agent.")]
-    result_data: Annotated[Optional[Any], AG2Field(description="The result of the function invocation as Any type.")] = ""
-    result_str: Annotated[Optional[str], AG2Field(description="The result of the function invocation as str type.")] = ""
+    result_data: Annotated[
+        Optional[Any], AG2Field(description="The result of the function invocation as Any type.")
+    ] = ""
+    result_str: Annotated[Optional[str], AG2Field(description="The result of the function invocation as str type.")] = (
+        ""
+    )
     hypothesis: Annotated[Optional[str], AG2Field(description=HYPOTHESIS_DEF)] = ""
     args: Annotated[Optional[list[Any]], AG2Field(description="The args for the function invocation")] = []
     kwargs: Annotated[Optional[dict], AG2Field(description="The kwargs for the function invocation")] = {}
-    swarm_result_agent: Annotated[Optional[str], AG2Field(description="If the function returned SwarmResult with an agent, store it here.")] = ""
+    swarm_result_agent: Annotated[
+        Optional[str], AG2Field(description="If the function returned SwarmResult with an agent, store it here.")
+    ] = ""
     validation_result: Annotated[bool, AG2Field(description=VALIDATION_RESULT_RESULT_DEF)] = False
     justification: Annotated[str, AG2Field(description=VALIDATION_RESULT_JUSTIFICATION_DEF)] = ""
+
     class Config:
         arbitrary_types_allowed = True
 
@@ -81,11 +87,11 @@ Result:
 # TODO: Multiple registered functions support
 # A lot will likely need to happen for this one
 # Each one of them needs to be wrapped, do they each have their own unique results validator?
-# Maybe just don't do this? 
+# Maybe just don't do this?
 
 # TODO: Flag to turn off hypothesis, add more?
 
-# TODO: Better working way to explain what the function passed into this sould return, str or Any,str, or SwarmResults
+# TODO: Better working way to explain what the function passed into this should return, str or Any,str, or SwarmResults
 
 # This class relies heavily on using context_variables to store state as it is working.
 # It uses the key {name}-ReliableFunctionContext as the location it writes to
@@ -98,7 +104,7 @@ class ReliableFunctionAgent(ConversableAgent):
         name: str,
         runner_llm_config: dict,
         validator_llm_config: dict,
-        agent_system_message: str,
+        runner_system_message: str,
         validator_system_message: str,
         func_or_tool: Union[Callable, Tool],
         max_rounds: int = 10,
@@ -106,35 +112,34 @@ class ReliableFunctionAgent(ConversableAgent):
     ) -> None:
         super().__init__(
             name=name,
-            llm_config=None,  
+            llm_config=None,
             system_message="",
             **kwargs,
         )
 
-        self._agent_system_message = agent_system_message
+        self._runner_system_message = runner_system_message
         self._validator_system_message = validator_system_message
         self.max_rounds = max_rounds
-        self._context_variables_key = f'{self.name}-ReliableFunctionContext'
+        self._context_variables_key = f"{self.name}-ReliableFunctionContext"
         self._validator = ConversableAgent(
-            name=name+"-Validator",
+            name=name + "-Validator",
             llm_config=_configure_structured_output(validator_llm_config, ValidationResult),
-            **kwargs
+            **kwargs,
         )
         if isinstance(func_or_tool, Tool):
-            func_or_tool._func = reliable_function_wrapper(func_or_tool.func, self._validator, self._context_variables_key)
+            func_or_tool._func = reliable_function_wrapper(
+                func_or_tool.func, self._validator, self._context_variables_key
+            )
             self._func = func_or_tool
         else:
             self._func = reliable_function_wrapper(func_or_tool, self._validator, self._context_variables_key)
 
         # self._runner.register_for_llm()(self._func_or_tool)
-        
-        markcoroutinefunction(self._func)
-        self._runner = ConversableAgent(
-            name=name+"-Runner", llm_config=runner_llm_config,**kwargs
-        )
 
-        self._runner.register_for_llm()(func_or_tool)
-        self._runner.register_for_execution()(func_or_tool)
+        self._runner = ConversableAgent(name=name + "-Runner", llm_config=runner_llm_config, **kwargs)
+
+        self._runner.register_for_llm()(self._func)
+        self._runner.register_for_execution()(self._func)
 
         self._validator.register_hook(
             hookable_method="process_message_before_send", hook=self._validator_structured_output_hook
@@ -149,24 +154,27 @@ class ReliableFunctionAgent(ConversableAgent):
         register_hand_off(self._runner, AfterWork(self._runner))
         self.register_reply([Agent, None], self._reply)
 
-    def _reply(self, messages: Optional[List[Dict]] = None,
-                        sender: Optional[ConversableAgent] = None,
-                        config: Optional[Any] = None,
-                    ) -> Tuple[bool, Union[str, Dict, None]]:
+    def _reply(
+        self,
+        messages: Optional[List[Dict]] = None,
+        sender: Optional[ConversableAgent] = None,
+        config: Optional[Any] = None,
+    ) -> Tuple[bool, Union[str, Dict, None]]:
         # Just to be safe for now, I haven't dug through to see what messages it returns last
         task = _get_last_non_empty_message(messages)
         sender_context = sender._context_variables
-        sender_has_context = sender_context is not None
         if sender_context is None:
             sender_context = {}
-        reliable_function_context:ReliableFunctionContext = self.run_func(task, messages, context_variables=sender_context)
+        reliable_function_context: ReliableFunctionContext = self.run_func(
+            task, messages, context_variables=sender_context
+        )
         self._swarm_after_work = AfterWork(agent=reliable_function_context.swarm_result_agent)
         # I think you can just pass the dictionary reference back out
         # This probably breaks things still though, haven't fully thought through returning a new context_variables if the function didn't have it
-        # And it is not expected. I think it is probably fine though because this is not treated as a function call so there 
-        # shouldn't be anything that happens after to 
+        # And it is not expected. I think it is probably fine though because this is not treated as a function call so there
+        # shouldn't be anything that happens after to
         return reliable_function_context.result_str
-    
+
     def _only_previous_function_results_hook(self, messages: list[dict]) -> list[dict]:
         function_results = _get_last_non_empty_message(messages)
 
@@ -181,7 +189,9 @@ class ReliableFunctionAgent(ConversableAgent):
 
         validation_result: ValidationResult = ValidationResult.model_validate_json(message_text)
 
-        reliable_function_context = _get_reliable_function_context(sender._context_variables,self._context_variables_key)
+        reliable_function_context = _get_reliable_function_context(
+            sender._context_variables, self._context_variables_key
+        )
         reliable_function_context.validation_result = validation_result.validation_result
         reliable_function_context.justification = validation_result.justification
 
@@ -202,7 +212,7 @@ class ReliableFunctionAgent(ConversableAgent):
             }
 
         return message
-    
+
     # Roll this into run(), haven't really looked at how that is implemented yet
     def run_func(self, task: str, messages: list[dict] = [], context_variables: dict = {}) -> ReliableFunctionContext:
         # Needed because we rely on prompt for the task, could move it in to messages and not have to do this
@@ -212,20 +222,25 @@ class ReliableFunctionAgent(ConversableAgent):
         reliable_function_context = ReliableFunctionContext(task=task)
         _set_reliable_function_context(context_variables, self._context_variables_key, reliable_function_context)
 
-        chat_result, final_context_variables, last_active_agent = initiate_swarm_chat(
+        _, final_context_variables, _ = initiate_swarm_chat(
             initial_agent=self._runner,
             agents=[self._runner, self._validator],
-            messages=messages + [{
-                "role": "user",
-                "content": task,
-            }],
+            messages=messages
+            + [
+                {
+                    "role": "user",
+                    "content": task,
+                }
+            ],
             max_rounds=self.max_rounds,
             context_variables=context_variables,
         )
 
         return _get_reliable_function_context(final_context_variables, self._context_variables_key)
-    
-    async def a_run_func(self, task: str, messages: list[dict] = [], context_variables: dict = {}) -> ReliableFunctionContext:
+
+    async def a_run_func(
+        self, task: str, messages: list[dict] = [], context_variables: dict = {}
+    ) -> ReliableFunctionContext:
         # Needed because we rely on prompt for the task, could move it in to messages and not have to do this
         # Maybe could do something smarter by using UpdateSystemMessage
         self._update_prompts(task)
@@ -233,13 +248,16 @@ class ReliableFunctionAgent(ConversableAgent):
         reliable_function_context = ReliableFunctionContext(task=task)
         _set_reliable_function_context(context_variables, self._context_variables_key, reliable_function_context)
 
-        chat_result, final_context_variables, last_active_agent = await a_initiate_swarm_chat(
+        _, final_context_variables, _ = await a_initiate_swarm_chat(
             initial_agent=self._runner,
             agents=[self._runner, self._validator],
-            messages=messages + [{
-                "role": "user",
-                "content": task,
-            }],
+            messages=messages
+            + [
+                {
+                    "role": "user",
+                    "content": task,
+                }
+            ],
             max_rounds=self.max_rounds,
             context_variables=context_variables,
         )
@@ -247,27 +265,20 @@ class ReliableFunctionAgent(ConversableAgent):
         return _get_reliable_function_context(final_context_variables, self._context_variables_key)
 
     def _update_prompts(self, task):
-        self._runner.update_system_message(
-            get_runner_prompt(
-                task, self._agent_system_message
-            )
-        )
+        self._runner.update_system_message(get_runner_prompt(task, self._runner_system_message))
 
-        self._validator.update_system_message(
-            get_validator_prompt(task, self._validator_system_message)
-        )
+        self._validator.update_system_message(get_validator_prompt(task, self._validator_system_message))
+
 
 def reliable_function_wrapper(tool_function, validator, context_variables_key):
     @functools.wraps(tool_function)
     async def wrapper(*args, hypothesis="", context_variables: Dict[str, str], **kwargs) -> Any:
-        print(
-            f"Running tool function {tool_function.__name__} with hypothesis: {hypothesis} and context_variables: {context_variables}"
-        )
-        # Call the tool function with the given parameters.
-        result = tool_function(context_variables=context_variables, *args, **kwargs)
-        # If the result is a coroutine, await it.
-        if asyncio.iscoroutine(result):
-            result = await result
+        try:
+            # Call the tool function with the given parameters.
+            result = tool_function(context_variables=context_variables, *args, **kwargs)
+            # If the result is a coroutine, await it.
+            if asyncio.iscoroutine(result):
+                result = await result
 
             # Process the result into two parts.
             result_data, result_direct = (None, None)
@@ -304,14 +315,17 @@ def reliable_function_wrapper(tool_function, validator, context_variables_key):
 
             # Return a SwarmResult.
             # The fact that it is validator.name is CRITICAL
-            # As conversable_agent requires this object to be serializable 
+            # As conversable_agent requires this object to be serializable
             return SwarmResult(
                 context_variables=context_variables,
                 agent=validator.name,
                 values=result_str,
             )
-
-        return result
+        except Exception as e:
+            return f"""There was an error with the function invocation.
+Error:
+{e}
+"""
 
     orig_sig = inspect.signature(tool_function)
     params = list(orig_sig.parameters.values())
@@ -330,6 +344,7 @@ def reliable_function_wrapper(tool_function, validator, context_variables_key):
 
     return wrapper
 
+
 # non-destructive
 # TODO Not sure if it is acceptable to mess with a llm_config
 def _configure_structured_output(llm_config, structured_output_type):
@@ -346,11 +361,14 @@ def _get_last_non_empty_message(messages):
             return message["content"]
     return None
 
+
 def _get_reliable_function_context(context_variables, reliable_function_context_key):
     return ReliableFunctionContext.model_validate_json(context_variables[reliable_function_context_key])
 
+
 def _set_reliable_function_context(context_variables, reliable_function_context_key, reliable_function_context):
     context_variables[reliable_function_context_key] = reliable_function_context.model_dump_json()
+
 
 def get_runner_prompt(task, agent_system_message) -> str:
     prompt = f"""
@@ -367,7 +385,7 @@ Task:
 
 def get_validator_prompt(task, validator_system_message) -> str:
     return f"""
-You will be provided user_input and result. Perform the following validations on the result based on the task.
+You will be provided a task and result. Perform the following validations on the result based on the task.
 
 Task:
 {task}
