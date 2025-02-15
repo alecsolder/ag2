@@ -287,6 +287,8 @@ def get_function_schema(f: Callable[..., Any], *, name: Optional[str] = None, de
 
     parameters = get_parameters(required, param_annotations, default_values=default_values)
 
+    
+
     function = ToolFunction(
         function=Function(
             description=description,

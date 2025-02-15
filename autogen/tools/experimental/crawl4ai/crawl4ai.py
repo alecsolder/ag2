@@ -186,6 +186,17 @@ class Crawl4AITool(Tool):
         )
 
         # 2. Build the crawler config
-        crawl_config = CrawlerRunConfig(extraction_strategy=llm_strategy, cache_mode=CacheMode.BYPASS)
+        crawl_config = CrawlerRunConfig(extraction_strategy=llm_strategy, cache_mode=CacheMode.BYPASS, wait_for="css:div.g",  # Wait for search results to load
+        word_count_threshold=10,  # Minimum word count to consider a text block
+        excluded_tags=["script", "style", "nav", "footer"],  # Exclude non-content tags
+        exclude_external_links=True,  # Exclude links pointing outside the current domain
+        scan_full_page=True,  # Scroll through the page to load all content
+        scroll_delay=0.2,  # Delay between scroll steps
+        process_iframes=False,  # Do not process iframe content
+        remove_overlay_elements=True,  # Remove pop-ups and overlays
+        simulate_user=True,  # Simulate user interactions to avoid bot detection
+        adjust_viewport_to_content=True,  # Adjust viewport to match content height
+        verbose=True,  # Enable verbose logging for debugging
+        )
 
         return crawl_config

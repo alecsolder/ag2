@@ -2930,6 +2930,21 @@ class ConversableAgent(LLMAgent):
             tool_sig (str or dict): description/name of the tool to update/remove to the model. See: https://platform.openai.com/docs/api-reference/chat/create#chat-create-tools
             is_remove: whether removing the tool from llm_config with name 'tool_sig'
         """
+
+        # Remove context_variables parameter from function schema
+        f_no_context = tool_sig
+        if __CONTEXT_VARIABLES_PARAM_NAME__ in f_no_context["function"]["parameters"]["properties"]:
+            del f_no_context["function"]["parameters"]["properties"][__CONTEXT_VARIABLES_PARAM_NAME__]
+        if "required" in f_no_context["function"]["parameters"]:
+            required = f_no_context["function"]["parameters"]["required"]
+            f_no_context["function"]["parameters"]["required"] = [
+                param for param in required if param != __CONTEXT_VARIABLES_PARAM_NAME__
+            ]
+            # If required list is empty, remove it
+            if not f_no_context["function"]["parameters"]["required"]:
+                del f_no_context["function"]["parameters"]["required"]
+
+
         if not self.llm_config:
             error_msg = "To update a tool signature, agent must have an llm_config"
             logger.error(error_msg)
@@ -2937,29 +2952,29 @@ class ConversableAgent(LLMAgent):
 
         if is_remove:
             if "tools" not in self.llm_config:
-                error_msg = f"The agent config doesn't have tool {tool_sig}."
+                error_msg = f"The agent config doesn't have tool {f_no_context}."
                 logger.error(error_msg)
                 raise AssertionError(error_msg)
             else:
                 self.llm_config["tools"] = [
-                    tool for tool in self.llm_config["tools"] if tool["function"]["name"] != tool_sig
+                    tool for tool in self.llm_config["tools"] if tool["function"]["name"] != f_no_context
                 ]
         else:
-            if not isinstance(tool_sig, dict):
+            if not isinstance(f_no_context, dict):
                 raise ValueError(
                     f"The tool signature must be of the type dict. Received tool signature type {type(tool_sig)}"
                 )
-            self._assert_valid_name(tool_sig["function"]["name"])
+            self._assert_valid_name(f_no_context["function"]["name"])
             if "tools" in self.llm_config:
-                if any(tool["function"]["name"] == tool_sig["function"]["name"] for tool in self.llm_config["tools"]):
-                    warnings.warn(f"Function '{tool_sig['function']['name']}' is being overridden.", UserWarning)
+                if any(tool["function"]["name"] == f_no_context["function"]["name"] for tool in self.llm_config["tools"]):
+                    warnings.warn(f"Function '{f_no_context['function']['name']}' is being overridden.", UserWarning)
                 self.llm_config["tools"] = [
                     tool
                     for tool in self.llm_config["tools"]
-                    if tool.get("function", {}).get("name") != tool_sig["function"]["name"]
-                ] + [tool_sig]
+                    if tool.get("function", {}).get("name") != f_no_context["function"]["name"]
+                ] + [f_no_context]
             else:
-                self.llm_config["tools"] = [tool_sig]
+                self.llm_config["tools"] = [f_no_context]
 
         if len(self.llm_config["tools"]) == 0:
             del self.llm_config["tools"]

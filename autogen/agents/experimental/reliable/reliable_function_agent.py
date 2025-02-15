@@ -84,7 +84,7 @@ Result:
         return {
             "role": "assistant",
             "name": self.reliable_agent_name,
-            "content": f"""Background Information:
+            "content": f"""BACKGROUND INFORMATION:
 Task: {self.task}
 Result:
 {self.result_str}""",
@@ -151,8 +151,8 @@ class ReliableFunctionAgent(ConversableAgent):
 
         self._runner = ConversableAgent(name=name + "-Runner", llm_config=runner_llm_config, **kwargs)
 
-        self._runner.register_for_llm()(self._func)
         self._runner.register_for_execution()(self._func)
+        self._runner.register_for_llm()(self._func)
 
         self._validator.register_hook(
             hookable_method="process_message_before_send", hook=self._validator_structured_output_hook
@@ -218,7 +218,7 @@ class ReliableFunctionAgent(ConversableAgent):
         self, sender: Agent, message: Union[dict, str], recipient: SwarmAgent, silent: bool
     ) -> Union[dict, str]:
         if isinstance(message, str) and (recipient is self._runner or recipient.name == "chat_manager"):
-            return {
+                return {
                 "name": "_User",
                 "role": "user",
                 "content": "Please ensure function call meets the strict schema requirements.",
@@ -259,7 +259,7 @@ class ReliableFunctionAgent(ConversableAgent):
 
 def reliable_function_wrapper(tool_function, validator, context_variables_key):
     @functools.wraps(tool_function)
-    async def wrapper(*args, hypothesis="", context_variables: Dict[str, str], **kwargs) -> Any:
+    async def wrapper(*args, hypothesis, context_variables: Dict[str, str], **kwargs) -> Any:
         try:
             # Call the tool function with the given parameters.
             result = tool_function(context_variables=context_variables, *args, **kwargs)
@@ -309,6 +309,8 @@ def reliable_function_wrapper(tool_function, validator, context_variables_key):
                 values=result_str,
             )
         except Exception as e:
+            import traceback
+            print(traceback.format_exc())
             return f"""There was an error with the function invocation.
 Error:
 {e}

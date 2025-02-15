@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Annotated, Any, Optional
+from typing import Annotated, Any, Optional, Tuple
 
 from pydantic import BaseModel
 
@@ -48,9 +48,12 @@ class BrowserUseTool(Tool):
         self,
         *,
         llm_config: dict[str, Any],
+        planner_llm_config: dict[str, Any] =  None,
         browser: Optional["Browser"] = None,
         agent_kwargs: Optional[dict[str, Any]] = None,
         browser_config: Optional[dict[str, Any]] = None,
+        controller_kwargs: Optional[dict[str, Any]] = None,
+        planner_kwargs: Optional[dict[str, Any]] = None
     ):
         """Use the browser to perform a task.
 
@@ -59,6 +62,7 @@ class BrowserUseTool(Tool):
             browser: The browser to use. If defined, browser_config must be None
             agent_kwargs: Additional keyword arguments to pass to the Agent
             browser_config: The browser configuration to use. If defined, browser must be None
+            controller_kwargs: The controller configuration to use. output_model is still set on the llm_config as if it was structured output.
         """
         if agent_kwargs is None:
             agent_kwargs = {}
@@ -85,27 +89,35 @@ class BrowserUseTool(Tool):
         async def browser_use(  # type: ignore[no-any-unimported]
             task: Annotated[str, "The task to perform."],
             llm_config: Annotated[dict[str, Any], Depends(on(llm_config))],
+            planner_llm_config: Annotated[dict[str, Any], Depends(on(planner_llm_config))],
             browser: Annotated[Browser, Depends(on(browser))],
             agent_kwargs: Annotated[dict[str, Any], Depends(on(agent_kwargs))],
-        ) -> BrowserUseResult:
+            planner_kwargs: Annotated[dict[str, Any], Depends(on(planner_kwargs))]
+        ) -> Tuple[BrowserUseResult, str]:
             llm = BrowserUseTool._get_llm(llm_config)
 
-            max_steps = agent_kwargs.pop("max_steps", 100)
+            max_steps = agent_kwargs.pop("max_steps", 5)
+
+            planner_llm = None
+            if planner_llm_config is not None:
+                planner_llm = BrowserUseTool._get_llm(planner_llm_config)
 
             agent = Agent(
                 task=task,
                 llm=llm,
                 browser=browser,
-                controller=BrowserUseTool._get_controller(llm_config),
+                controller=BrowserUseTool._get_controller(llm_config, controller_kwargs),
+                planner_llm=planner_llm,
                 **agent_kwargs,
+                **planner_kwargs
             )
 
             result = await agent.run(max_steps=max_steps)
 
-            return BrowserUseResult(
+            return (BrowserUseResult(
                 extracted_content=result.extracted_content(),
                 final_result=result.final_result(),
-            )
+            ), result.final_result())
 
         super().__init__(
             name="browser_use",
@@ -114,13 +126,16 @@ class BrowserUseTool(Tool):
         )
 
     @staticmethod
-    def _get_controller(llm_config: dict[str, Any]) -> Any:
+    def _get_controller(llm_config: dict[str, Any], controller_kwargs: dict[str, Any]) -> Any:
         response_format = (
             llm_config["config_list"][0].get("response_format", None)
             if "config_list" in llm_config
             else llm_config.get("response_format")
         )
+        if controller_kwargs is not None:
+            return Controller(output_model=response_format, **controller_kwargs)
         return Controller(output_model=response_format)
+        
 
     @staticmethod
     def _get_llm(
@@ -128,7 +143,7 @@ class BrowserUseTool(Tool):
     ) -> Any:
         if "config_list" not in llm_config:
             if "model" in llm_config:
-                return ChatOpenAI(model=llm_config["model"])
+                return ChatOpenAI(model=llm_config["model"], base_url=llm_config["base_url"])
             raise ValueError("llm_config must be a valid config dictionary.")
 
         try:
@@ -136,7 +151,7 @@ class BrowserUseTool(Tool):
             api_type = llm_config["config_list"][0].get("api_type", "openai")
 
             # Ollama does not require an api_key
-            api_key = None if api_type == "ollama" else llm_config["config_list"][0]["api_key"]
+            api_key = None if api_type == "ollama" or 'api_key' not in llm_config["config_list"][0] else llm_config["config_list"][0]["api_key"]
 
             if api_type == "deepseek" or api_type == "azure" or api_type == "azure":
                 base_url = llm_config["config_list"][0].get("base_url")
@@ -151,7 +166,7 @@ class BrowserUseTool(Tool):
             raise ValueError(f"llm_config must be a valid config dictionary: {e}")
 
         if api_type == "openai":
-            return ChatOpenAI(model=model, api_key=api_key)
+            return ChatOpenAI(model=model, api_key=api_key, base_url=llm_config['config_list'][0]['base_url'])
         elif api_type == "azure":
             return AzureChatOpenAI(
                 model=model,
