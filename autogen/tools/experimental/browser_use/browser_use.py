@@ -4,6 +4,7 @@
 
 from typing import Annotated, Any, Optional, Tuple
 
+from browser_use import BrowserContextConfig
 from pydantic import BaseModel
 
 from ....doc_utils import export_module
@@ -48,7 +49,7 @@ class BrowserUseTool(Tool):
         self,
         *,
         llm_config: dict[str, Any],
-        planner_llm_config: dict[str, Any] =  None,
+        planner_llm_config: Optional[dict[str, Any]] = None,
         browser: Optional["Browser"] = None,
         agent_kwargs: Optional[dict[str, Any]] = None,
         browser_config: Optional[dict[str, Any]] = None,
@@ -77,9 +78,12 @@ class BrowserUseTool(Tool):
 
         if browser is None:
             # set default value for headless
+            config = BrowserContextConfig(
+                allowed_domains=['google.com', 'wikipedia.org'],
+            )
             headless = browser_config.pop("headless", True)
 
-            browser_config = BrowserConfig(headless=headless, **browser_config)
+            browser_config = BrowserConfig(headless=headless, new_context_config=config, **browser_config)
             browser = Browser(config=browser_config)
 
         # set default value for generate_gif
@@ -89,28 +93,38 @@ class BrowserUseTool(Tool):
         async def browser_use(  # type: ignore[no-any-unimported]
             task: Annotated[str, "The task to perform."],
             llm_config: Annotated[dict[str, Any], Depends(on(llm_config))],
-            planner_llm_config: Annotated[dict[str, Any], Depends(on(planner_llm_config))],
             browser: Annotated[Browser, Depends(on(browser))],
             agent_kwargs: Annotated[dict[str, Any], Depends(on(agent_kwargs))],
-            planner_kwargs: Annotated[dict[str, Any], Depends(on(planner_kwargs))]
+            # planner_llm_config: Optional[Annotated[dict[str, Any], Depends(on(planner_llm_config))]],
+            # planner_kwargs: Optional[Annotated[dict[str, Any], Depends(on(planner_kwargs))]]
         ) -> Tuple[BrowserUseResult, str]:
             llm = BrowserUseTool._get_llm(llm_config)
 
-            max_steps = agent_kwargs.pop("max_steps", 5)
+            max_steps = agent_kwargs.pop("max_steps", 100)
 
+            # all of this is super lazy code
             planner_llm = None
             if planner_llm_config is not None:
                 planner_llm = BrowserUseTool._get_llm(planner_llm_config)
-
-            agent = Agent(
-                task=task,
-                llm=llm,
-                browser=browser,
-                controller=BrowserUseTool._get_controller(llm_config, controller_kwargs),
-                planner_llm=planner_llm,
-                **agent_kwargs,
-                **planner_kwargs
-            )
+            if planner_kwargs:
+                agent = Agent(
+                    task=task,
+                    llm=llm,
+                    browser=browser,
+                    controller=BrowserUseTool._get_controller(llm_config, controller_kwargs),
+                    planner_llm=planner_llm,
+                    **agent_kwargs,
+                    **planner_kwargs
+                )
+            else:
+                agent = Agent(
+                    task=task,
+                    llm=llm,
+                    browser=browser,
+                    controller=BrowserUseTool._get_controller(llm_config, controller_kwargs),
+                    planner_llm=planner_llm,
+                    **agent_kwargs
+                )
 
             result = await agent.run(max_steps=max_steps)
 
@@ -166,7 +180,7 @@ class BrowserUseTool(Tool):
             raise ValueError(f"llm_config must be a valid config dictionary: {e}")
 
         if api_type == "openai":
-            return ChatOpenAI(model=model, api_key=api_key, base_url=llm_config['config_list'][0]['base_url'])
+            return ChatOpenAI(model=model, api_key=api_key, base_url=None if 'base_url' not in llm_config['config_list'][0] else llm_config['config_list'][0]['base_url'])
         elif api_type == "azure":
             return AzureChatOpenAI(
                 model=model,

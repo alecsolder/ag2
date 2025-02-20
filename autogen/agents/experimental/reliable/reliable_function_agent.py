@@ -83,7 +83,7 @@ Result:
     def to_message(self):
         return {
             "role": "assistant",
-            "name": self.reliable_agent_name,
+            "name": "all",
             "content": f"""BACKGROUND INFORMATION:
 Task: {self.task}
 Result:
@@ -150,6 +150,7 @@ class ReliableFunctionAgent(ConversableAgent):
         # self._runner.register_for_llm()(self._func_or_tool)
 
         self._runner = ConversableAgent(name=name + "-Runner", llm_config=runner_llm_config, **kwargs)
+        self._memory_agent = ConversableAgent(name="memory", llm_config=runner_llm_config, **kwargs)
 
         self._runner.register_for_execution()(self._func)
         self._runner.register_for_llm()(self._func)
@@ -237,7 +238,7 @@ class ReliableFunctionAgent(ConversableAgent):
 
         _, final_context_variables, _ = initiate_swarm_chat(
             initial_agent=self._runner,
-            agents=[self._runner, self._validator, self],
+            agents=[self._runner, self._validator, self._memory_agent, self],
             messages=messages
             + [
                 {
@@ -320,7 +321,11 @@ Error:
     params = list(orig_sig.parameters.values())
 
     # Create new parameters for hypothesis and context_variables.
-    hypothesis_param = inspect.Parameter("hypothesis", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=str)
+    hypothesis_param = inspect.Parameter("hypothesis", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Annotated[
+        str,
+        AG2Field(
+            description=HYPOTHESIS_DEF
+        )])
     context_variables_param = inspect.Parameter(
         "context_variables", kind=inspect.Parameter.POSITIONAL_OR_KEYWORD, annotation=Dict[str, str]
     )

@@ -1126,7 +1126,8 @@ class ConversableAgent(LLMAgent):
             else:
                 oai_message["name"] = conversation_id.name
 
-        self._oai_messages[conversation_id].append(oai_message)
+        # A weird bug where it doesn't init _oai_messages if you pass them in with chat_messages
+        self._oai_messages[conversation_id] = self._oai_messages.get(conversation_id, []) + [oai_message]
 
         return True
 
@@ -1291,7 +1292,9 @@ class ConversableAgent(LLMAgent):
         self._process_received_message(message, sender, silent)
         if request_reply is False or (request_reply is None and self.reply_at_receive[sender] is False):
             return
-        reply = self.generate_reply(messages=self.chat_messages[sender], sender=sender)
+        messages = [] if sender not in self.chat_messages else self.chat_messages[sender]
+        messages = messages if 'all' not in self.chat_messages else messages + self.chat_messages['all']
+        reply = self.generate_reply(messages=messages, sender=sender)
         if reply is not None:
             self.send(reply, sender, silent=silent)
 
