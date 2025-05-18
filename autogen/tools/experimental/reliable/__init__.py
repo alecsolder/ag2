@@ -5,6 +5,6 @@
 # Portions derived from  https://github.com/microsoft/autogen are under the MIT License.
 # SPDX-License-Identifier: MIT
 
-from .reliable import ReliableTool, ReliableToolError
+from .reliable import ReliableTool, ReliableToolError, SuccessfulExecutionParameters, ToolExecutionDetails
 
-__all__ = ["ReliableTool", "ReliableToolError"]
+__all__ = ["ReliableTool", "ReliableToolError", "SuccessfulExecutionParameters", "ToolExecutionDetails"]
