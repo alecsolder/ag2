@@ -535,13 +535,25 @@ class ReliableTool(Tool):
         description: Optional[str] = None,
         system_message_addition_for_tool_calling: str = "",
         system_message_addition_for_result_validation: str = "",
-        max_tool_invocations: int = 3,  
+        max_tool_invocations: int = 3,
         enable_dynamic_validation: bool = False,
         messages: Optional[List[dict[str, Any]]] = None,
         ground_truth: Optional[List[str]] = None,
     ) -> None:
         """
-        Initializes a ReliableTool instance.
+        A ReliableTool wraps an existing function or tool.
+        When the ReliableTool is invoked, it kicks off an internal Group Chat where a Runner
+        and Validator agent will iteratively invoke the wrapped function or tool until
+        *the output of a single invocation of the original function or tool satisfies the provided validation criteria.*
+        Reliable Tools are best used when the LLM used or the function or tool itself is unreliable.
+        Commonly this happens when using small, local LLMs, <32b params
+        Or when functions/tools are used to "explore" (doing many web searches, exploring a database with SQL)
+        The Reliable Tool allows the user to bake a result validation strategy into the tool itself
+        so that the broader group chat/agentic system can be built more clearly around the intended flow
+        instead of needing to focus so much on retry and validation loops.
+
+        Additionally, the .run() and .a_run() methods serve as a way to use LLMs to invoke a specific tool outside
+        of a Group Chat or similar structure to provide a more traditional programming method of using LLMs and tools in code.
 
         Args:
             name (str):
