@@ -51,8 +51,8 @@ class TestReliableTool:
             description="Reliably generates exactly 3 relevant sub-questions for a given main question.",
             runner_llm_config=credentials_gpt_4o_mini.llm_config,
             validator_llm_config=credentials_gpt_4o_mini.llm_config,
-            runner_system_message_addition=sub_question_runner_system_message_addition,
-            validator_system_message_addition=sub_question_validator_system_message_addition,
+            system_message_addition_for_tool_calling=sub_question_runner_system_message_addition,
+            system_message_addition_for_result_validation=sub_question_validator_system_message_addition,
             max_tool_invocations=5,
         )
 
@@ -86,8 +86,8 @@ class TestReliableTool:
             description="Reliably generates exactly 3 relevant sub-questions for a given main question.",
             runner_llm_config=credentials_gpt_4o_mini.llm_config,
             validator_llm_config=credentials_gpt_4o_mini.llm_config,
-            runner_system_message_addition=sub_question_runner_system_message_addition,
-            validator_system_message_addition=sub_question_validator_system_message_addition,
+            system_message_addition_for_tool_calling=sub_question_runner_system_message_addition,
+            system_message_addition_for_result_validation=sub_question_validator_system_message_addition,
             max_tool_invocations=5,
         )
 
@@ -121,8 +121,8 @@ class TestReliableTool:
             description="Reliably generates exactly 3 relevant sub-questions for a given main question.",
             runner_llm_config=credentials_gpt_4o_mini.llm_config,
             validator_llm_config=credentials_gpt_4o_mini.llm_config,
-            runner_system_message_addition=sub_question_runner_system_message_addition,
-            validator_system_message_addition=sub_question_validator_system_message_addition,
+            system_message_addition_for_tool_calling=sub_question_runner_system_message_addition,
+            system_message_addition_for_result_validation=sub_question_validator_system_message_addition,
             max_tool_invocations=5,
         )
 
