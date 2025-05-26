@@ -191,7 +191,15 @@ twilio = [
 mcp = [
     # mcp 1.6.0 keeps hanging in stdio_client context manager
     # test_mcp_issue_with_stdio_client_context_manager is failing for mcp=1.6.0
-    "mcp>=1.4.0,<1.6; python_version>='3.10'"
+    "mcp>=1.4.0,<1.6; python_version>='3.10'",
+]
+
+mcp-proxy-gen = [
+    "fastapi-code-generator>=0.5.4",
+    "fastapi>=0.112,<1",
+    "requests",  # do not pin it
+    "typer",
+    "PyYAML",
 ]
 
 interop-crewai = [
@@ -317,6 +325,7 @@ Tracker = "https://github.com/ag2ai/ag2/issues"
 Source = "https://github.com/ag2ai/ag2"
 Discord = "https://discord.gg/pAbnFJrkgZ"
 
+
 [tool.hatch.version]
 path = "autogen/version.py"
 
@@ -326,7 +335,13 @@ exclude = ["/test", "/notebook"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["autogen"]
-only-include = ["autogen", "autogen/agentchat/contrib/captainagent/tools"]
+only-include = [
+    "autogen",
+    # not sure about this, probably is not needed
+    "autogen/agentchat/contrib/captainagent/tools",
+    # need for generation of MCP Servers from OpenAPI specification
+    "templates",
+]
 
 [tool.hatch.build.targets.sdist]
 exclude = ["test", "notebook"]
